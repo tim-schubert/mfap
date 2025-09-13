@@ -146,6 +146,7 @@ refine_indel <- function(mt, del, dup, ins) {
 #------------------------------------------------------------------------------#
 ui <- bslib::page_navbar(
   useShinyjs(),
+  id = "topnav",
   title = tags$div(
     class = "brand",
     style = "display:flex;flex-direction:column;line-height:1.05;align-items:flex-start;padding-right:32px;",
@@ -380,7 +381,10 @@ ui <- bslib::page_navbar(
                   class = "lead-line",
                   "Use MfAP to analyze protein-level consequences of cDNA variants in single-exon genes. ",
                   a("Background →", href = "#",
-                    onclick = "document.querySelectorAll('.navbar-nav .nav-link')[1].click();")
+                    onclick = "
+            var link = document.querySelector('.navbar .nav-link[data-value=\"Background\"]');
+            if (link) { link.click(); }
+            return false;")
                 ),
                 tags$div(
                   class = "notes",
@@ -615,11 +619,51 @@ server <- function(input, output, session) {
   
   observeEvent(input$add_dom, {
     req(input$dom_name, input$dom_start)
-    max_aa <- wt_aa_len(); end_val <- if (isTRUE(input$dom_to_end)) max_aa else input$dom_end
-    if (!is.null(max_aa) && end_val > max_aa) {showNotification(paste0("Domain end (",end_val,") exceeds protein length (",max_aa,")."), type="error"); return()}
+    
+    max_aa <- wt_aa_len()
+    
+    # Decide end value robustly
+    if (isTRUE(input$dom_to_end)) {
+      if (is.null(max_aa) || is.na(max_aa) || !is.finite(max_aa)) {
+        showNotification("Protein length unknown. Load FASTA or run analysis first (so 'to end' can resolve).", type = "error")
+        return()
+      }
+      end_val <- as.integer(max_aa)
+    } else {
+      if (is.null(input$dom_end) || is.na(input$dom_end)) {
+        showNotification("Please provide a domain end position.", type = "error")
+        return()
+      }
+      end_val <- as.integer(input$dom_end)
+    }
+    
+    start_val <- as.integer(input$dom_start)
+    
+    # Basic sanity checks
+    if (!is.null(max_aa) && end_val > max_aa) {
+      showNotification(paste0("Domain end (", end_val, ") exceeds protein length (", max_aa, ")."), type = "error")
+      return()
+    }
+    if (!is.null(max_aa) && (start_val < 1 || end_val < 1 || start_val > end_val)) {
+      showNotification("Domain coordinates must be within [1, end] and Start ≤ End.", type = "error")
+      return()
+    }
+    
     df <- domains()
-    if (any(df$Name==input$dom_name & df$Start==input$dom_start & df$End==end_val)) {showNotification("Exact duplicate domain exists.", type="error"); return()}
-    domains(rbind(df, data.frame(Name=input$dom_name, Start=input$dom_start, End=end_val, stringsAsFactors=FALSE)))
+    if (nrow(df) > 0 && any(df$Name == input$dom_name & df$Start == start_val & df$End == end_val)) {
+      showNotification("Exact duplicate domain exists.", type = "error")
+      return()
+    }
+    
+    # Ensure correct column types
+    new_row <- data.frame(
+      Name  = as.character(input$dom_name),
+      Start = start_val,
+      End   = end_val,
+      stringsAsFactors = FALSE
+    )
+    
+    domains(rbind(df, new_row))
   })
   observeEvent(input$clr_dom, domains(data.frame(Name=character(),Start=integer(),End=numeric(),stringsAsFactors=FALSE)))
   output$dom_tbl <- renderTable(domains(), striped=TRUE, hover=TRUE)
