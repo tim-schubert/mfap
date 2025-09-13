@@ -311,7 +311,7 @@ ui <- bslib::page_navbar(
                            )))
                 ),
                 div(style="height:8px;"),
-                checkboxInput("use_titer", "Include alternative translation initiation site prediction (TITER)", FALSE),
+                checkboxInput("use_titer", "Include alternative translation initiation site prediction (TITER, developed by Zhang et al. 2017)", FALSE),
                 conditionalPanel(
                   condition = "input.use_titer == true",
                   uiOutput("fasta_flank_ui"),
@@ -391,7 +391,7 @@ ui <- bslib::page_navbar(
                   tags$p(
                     strong("Important notes:"),
                     "You are solely responsible for compliance with privacy and data-protection laws and policies. ",
-                    "This score and app are solely designed for research purposes."
+                    "This app is solely designed for research purposes."
                   ),
                   tags$div(
                     class = "cite-row",
