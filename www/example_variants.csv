@@ -1,0 +1,9 @@
+patient_ID,DNA_variant
+1,c.5G>A
+2,c.10del
+3,c.20_22del
+4,c.30dup
+5,c.35_37dup
+6,c.40insG
+7,c.60delinsT
+8,c.70_72delinsGGG
