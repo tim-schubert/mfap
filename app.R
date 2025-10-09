@@ -479,7 +479,7 @@ ui <- bslib::page_navbar(
                        style = "margin:0 0 8px 0;",
                        HTML("Schubert T, Tietzel A, Pottayil H, Caro P, Gilmore RB, Franke F, Althammer F, Schaaf CP. 2025. "),
                        em("A blueprint for protein-centric genotype-phenotype investigations in single-exon disease genes applied to MAGEL2 and Schaaf-Yang syndrome."),
-                       HTML(" <i>Am J Hum Genet</i> <b>VOLUME</b>(ISSUE):PAGES · "),
+                       HTML(" <i>Journal</i> <b>VOLUME</b>(ISSUE):PAGES · "),
                        tags$a(href="https://doi.org/10.xxxx/xxxxx", target="_blank", "doi:10.xxxx/xxxxx"),
                        HTML(" · "),
                        actionLink("bib_schubert_bg", "BibTeX", class = "bib-link")
