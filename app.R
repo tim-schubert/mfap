@@ -255,6 +255,27 @@ ui <- bslib::page_navbar(
       }
     ")),
     tags$script(HTML("
+    // Show-once modal using sessionStorage (per tab/session)
+    Shiny.addCustomMessageHandler('mfap_show_intro', function(msg){
+      try {
+        const key = msg.key || 'mfap_intro_dismissed_v1';
+        const dismissed = sessionStorage.getItem(key) === '1';
+        if (!dismissed) {
+          const m = new bootstrap.Modal(document.getElementById('mfap_intro_modal'));
+          m.show();
+        }
+      } catch(e) {}
+    });
+
+    // When user closes, persist dismissal
+    document.addEventListener('click', function(e){
+      const btn = e.target.closest('[data-intro-dismiss]');
+      if (!btn) return;
+      const key = btn.getAttribute('data-intro-key') || 'mfap_intro_dismissed_v1';
+      try { sessionStorage.setItem(key, '1'); } catch(e) {}
+    });
+  ")),
+    tags$script(HTML("
       document.addEventListener('click', function(e){
         const btn = e.target.closest('[data-copy-target]');
         if (!btn) return;
@@ -499,11 +520,53 @@ ui <- bslib::page_navbar(
         )
     )
   ),
+  # session dialogue #
+  tags$div(
+  class = "modal fade",
+  id = "mfap_intro_modal",
+  tabindex = "-1",
+  tags$div(
+    class = "modal-dialog modal-lg modal-dialog-centered",
+    tags$div(
+      class = "modal-content",
+      tags$div(class="modal-header",
+        tags$h5(class="modal-title", "Welcome to MfAP"),
+        tags$button(
+          type="button", class="btn-close",
+          `data-bs-dismiss`="modal",
+          `data-intro-dismiss`="1",
+          `data-intro-key`="mfap_intro_dismissed_v1",
+          `aria-label`="Close"
+        )
+      ),
+      tags$div(class="modal-body",
+        tags$p("MfAP helps you quantify protein-level consequences of cDNA variants in single-exon genes."),
+        tags$ul(
+          tags$li(tags$b("Input:"), " HGVS cDNA variants (", tags$code("DNA_variant"), ") + reference CDS FASTA."),
+          tags$li(tags$b("Single-exon focus:"), " PTVs may evade NMD and yield truncated proteins."),
+          tags$li(tags$b("Imprinted genes:"), " only include variants on the expressed allele (e.g., paternal-only genes: upload paternal variants)."),
+          tags$li(tags$b("Privacy:"), " ensure compliance with your local policies; research-use only.")
+        ),
+        tags$p(class="muted", "Tip: use “Load demo cohort” to see the expected file formats.")
+      ),
+      tags$div(class="modal-footer",
+        tags$button(
+          type="button", class="btn btn-secondary",
+          `data-bs-dismiss`="modal",
+          `data-intro-dismiss`="1",
+          `data-intro-key`="mfap_intro_dismissed_v1",
+          "Got it"
+        )
+      )
+    )
+  )
+)
+
   
   # --- Footer spacer & footer ---
   tags$div(style="height:100px;"),
   tags$footer(
-    class = "site-footer",
+    cla← = "site-footer",
     style = "background:transparent; color:#fff;",
     tags$div(
       class = "site-footer__inner",
@@ -547,6 +610,10 @@ server <- function(input, output, session) {
     has_flank <- if (isTRUE(input$use_titer)) {!is.null(input$fasta_flank) || !is.null(example_fasta_flank_seq())} else TRUE
     shinyjs::toggleState("run", has_csv && has_fasta && has_flank)
   })
+
+  observeEvent(TRUE, {
+    session$sendCustomMessage("mfap_show_intro", list(key = "mfap_intro_dismissed_v1"))
+  }, once = TRUE)
   
   observeEvent(input$clear_uploads, {
     shinyjs::reset("csv"); shinyjs::reset("fasta"); shinyjs::reset("fasta_flank")
