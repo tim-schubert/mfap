@@ -144,10 +144,13 @@ refine_indel <- function(mt, del, dup, ins) {
 #------------------------------------------------------------------------------#
 # UI 
 #------------------------------------------------------------------------------#
-ui <- bslib::page_navbar(
-  useShinyjs(),
-  id = "topnav",
-  title = tags$div(
+ui <- tagList(
+    bslib::page_navbar(
+      fillable = FALSE,
+      useShinyjs(),
+      id = "topnav",
+      title = tags$div(
+        
     class = "brand",
     style = "display:flex;flex-direction:column;line-height:1.05;align-items:flex-start;padding-right:32px;",
     tags$span(class="brand-title",   "MfAP 🗺"),
@@ -157,6 +160,7 @@ ui <- bslib::page_navbar(
   window_title = "MfAP — Molecular feature Association Pipeline",
   header = tags$head(
     tags$style(HTML("
+    
       .page-container{max-width:1180px;margin:0 auto;padding:0 14px;}
       .navbar .container-fluid{max-width:1180px;margin:0 auto;padding:0 14px;}
       .lit-item p{ margin:0 0 6px 0; }
@@ -201,7 +205,7 @@ ui <- bslib::page_navbar(
           padding: 10px 12px;
           border-radius: 12px;
           margin-top: 10px;
-          z-index: 3;
+          z-index: 2;
         }
       .action-row{display:flex;gap:8px;}
       .action-dock .btn{width:100%;}
@@ -224,14 +228,15 @@ ui <- bslib::page_navbar(
       
       #bibtex_block{white-space:pre-wrap;font-size:.86rem;background:#1f1f1f;
       padding:10px;border-radius:8px;border:1px solid #2a2a2a;}
-
-      footer, .site-footer { clear: both; }
-
-      .site-footer{
-        background:transparent;
-        color:#fff;
-        border-top:1px solid rgba(255,255,255,0.10);
+      
+      .sidebar.well,
+      .well.sidebar {
+        background: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        padding: 0 !important;
       }
+      
       .site-footer__inner{
         max-width:1180px; margin:0 auto; padding:20px 14px;
         display:flex; align-items:center; justify-content:space-between; gap:14px;
@@ -248,6 +253,10 @@ ui <- bslib::page_navbar(
       .site-footer__logo{ height:60px; flex:0 0 auto; }
       .site-footer__center{ flex:1 1 auto; text-align:center; color:#fff; }
       .site-footer__link{ color:#fff; text-decoration:underline; }
+      .site-footer{
+  position: relative;
+  z-index: 10;
+}
       
 button.intro-cta{
   width:100%;
@@ -495,20 +504,13 @@ button.intro-cta:active{
                  bslib::card(
                    bslib::card_header("Overview"),
                    bslib::card_body(
-                     p("MfAP is a framework developed by Tim Schubert and colleagues at the Institute of Human Genetics of Heidelberg University (Germany), which allows users to calculate and predict DNA and protein 
-                       level consequences of genetic variation in single-exon genes. 
-                       MfAP requires minimal user input: a list of variants in HGVS cDNA 
-                       notation and the reference DNA sequence of the gene of interest.")
+                     p("MfAP is a framework developed by Tim Schubert and colleagues at the Institute of Human Genetics of Heidelberg University (Germany), which allows users to calculate and predict DNA and protein level consequences of genetic variation in single-exon genes. MfAP requires minimal user input: a list of variants in HGVS cDNA notation and the reference DNA sequence of the gene of interest.")
                    )
                  ),
                  bslib::card(
                    bslib::card_header("Rationale"),
                    bslib::card_body(
-                     p("Protein-truncating variants (PTVs) canonically lead to nonsense-mediated mRNA decay. 
-                       This process necessitates an exon-exon junction, which is lacking in single-exon genes. 
-                       Therefore, PTVs in single-exon genes can result in a truncated protein that may have dominant-negative, gain-of-function, or neomorphic effects.
-                       In our accompanying manuscript, we demonstrate that MfAP-predicted protein-level attributes of such
-                       truncated proteins provide a stronger causal link between genotype and phenotypic severity."),
+                     p("Protein-truncating variants (PTVs) canonically lead to nonsense-mediated mRNA decay. This process necessitates an exon-exon junction, which is lacking in single-exon genes. Therefore, PTVs in single-exon genes can result in a truncated protein that may have dominant-negative, gain-of-function, or neomorphic effects. In our accompanying manuscript, we demonstrate that MfAP-predicted protein-level attributes of such truncated proteins provide a stronger causal link between genotype and phenotypic severity."),
                      tags$figure(
                        tags$img(
                          src = "https://lh3.googleusercontent.com/d/1gDNYo7HuDE4md9mvPLc4yiQXgOnl29Ly",
@@ -567,52 +569,11 @@ button.intro-cta:active{
           )
         )
     )
-  ),
-  # session dialogue #
-  tags$div(
-    class = "modal fade",
-    id = "mfap_intro_modal",
-    tabindex = "-1",
-    tags$div(
-      class = "modal-dialog modal-lg modal-dialog-centered",
-      tags$div(
-        class = "modal-content",
-        tags$div(class="modal-header",
-                 tags$h5(class="modal-title", "Welcome to MfAP"),
-                 tags$button(
-                   type="button", class="btn-close",
-                   `data-bs-dismiss`="modal",
-                   `data-intro-dismiss`="1",
-                   `data-intro-key`="mfap_intro_dismissed_v1",
-                   `aria-label`="Close"
-                 )
-        ),
-        tags$div(class="modal-body",
-                 tags$p("MfAP helps you quantify protein-level consequences of cDNA variants in single-exon genes."),
-                 tags$ul(
-                   tags$li(tags$b("Input:"), " HGVS cDNA variants (", tags$code("DNA_variant"), ") + reference CDS FASTA."),
-                   tags$li(tags$b("Single-exon focus:"), " PTVs may evade NMD and yield truncated proteins."),
-                   tags$li(tags$b("Imprinted genes:"), " only include variants on the expressed allele (e.g., paternal-only genes: upload paternal variants)."),
-                   tags$li(tags$b("Privacy:"), " ensure compliance with your local policies; research-use only.")
-                 ),
-                 tags$p(class="muted", "Tip: use “Load demo cohort” to see the expected file formats.")
-        ),
-        tags$div(class="modal-footer",
-                 tags$button(
-                   type="button", class="btn btn-secondary",
-                   `data-bs-dismiss`="modal",
-                   `data-intro-dismiss`="1",
-                   `data-intro-key`="mfap_intro_dismissed_v1",
-                   "Got it"
-                 )
-        )
-      )
-    )
-  ),
+  )  # end nav_panel Background
+    )  # <-- THIS closes page_navbar()
   
+  ,  # <-- comma separating the two children of tagList()
   
-  # --- Footer spacer & footer ---
-  tags$div(style="height:100px;"),
   tags$footer(
     class = "site-footer",
     style = "background:transparent; color:#fff;",
@@ -623,15 +584,22 @@ button.intro-cta:active{
         class="site-footer__center",
         tags$p(HTML("&copy; 2025 Tim Schubert"), style="margin:0;"),
         tags$p(
-          tags$a(href="https://www.apache.org/licenses/LICENSE-2.0.html",
-                 target="_blank", "Apache License 2.0", class="site-footer__link"),
+          tags$a(
+            href="https://www.apache.org/licenses/LICENSE-2.0.html",
+            target="_blank",
+            "Apache License 2.0",
+            class="site-footer__link"
+          ),
           style="margin:0;"
         )
       ),
       tags$img(src="https://lh3.googleusercontent.com/d/1BPl641wAs67xCTAKEEETVO0zjzOYUrda", class="site-footer__logo")
     )
   )
-)
+)  # end tagList
+
+
+
 
 #------------------------------------------------------------------------------#
 # Server
