@@ -560,13 +560,13 @@ ui <- bslib::page_navbar(
       )
     )
   )
-)
+),
 
   
   # --- Footer spacer & footer ---
   tags$div(style="height:100px;"),
   tags$footer(
-    cla← = "site-footer",
+    class = "site-footer",
     style = "background:transparent; color:#fff;",
     tags$div(
       class = "site-footer__inner",
