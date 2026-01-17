@@ -191,18 +191,18 @@ ui <- bslib::page_navbar(
 
       .sidebar{position:sticky;top:16px;max-height:calc(100vh - 32px);overflow:auto;}
       .action-dock{
-  position: sticky;
-  bottom: 0;
-  background: rgba(32,35,38,0.35);      /* more see-through */
-  backdrop-filter: blur(8px) saturate(120%);
-  -webkit-backdrop-filter: blur(8px) saturate(120%); /* Safari */
-  border: 1px solid rgba(255,255,255,0.12);
-  box-shadow: 0 6px 24px rgba(0,0,0,0.25);
-  padding: 10px 12px;
-  border-radius: 12px;
-  margin-top: 10px;
-  z-index: 3;
-}
+          position: sticky;
+          bottom: 0;
+          background: rgba(32,35,38,0.35);      /* more see-through */
+          backdrop-filter: blur(8px) saturate(120%);
+          -webkit-backdrop-filter: blur(8px) saturate(120%); /* Safari */
+          border: 1px solid rgba(255,255,255,0.12);
+          box-shadow: 0 6px 24px rgba(0,0,0,0.25);
+          padding: 10px 12px;
+          border-radius: 12px;
+          margin-top: 10px;
+          z-index: 3;
+        }
       .action-row{display:flex;gap:8px;}
       .action-dock .btn{width:100%;}
 
@@ -248,6 +248,58 @@ ui <- bslib::page_navbar(
       .site-footer__logo{ height:60px; flex:0 0 auto; }
       .site-footer__center{ flex:1 1 auto; text-align:center; color:#fff; }
       .site-footer__link{ color:#fff; text-decoration:underline; }
+      
+button.intro-cta{
+  width:100%;
+  font-weight:700;
+  padding:12px 14px;
+  border-radius:10px;
+
+  background: rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,.14);
+
+  color:#e9ecef !important;
+  text-align:center;
+
+  position: relative;
+  overflow: hidden;
+
+  transition: transform .08s ease, box-shadow .12s ease, border-color .12s ease;
+}
+
+button.intro-cta::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  background: rgba(77,171,247,0.85);
+  transform: translateX(-101%);
+  transition: transform .28s ease;
+  z-index:0;
+}
+
+button.intro-cta > span{
+  position:relative;
+  z-index:1;
+}
+
+button.intro-cta:hover,
+button.intro-cta:focus,
+button.intro-cta:active{
+  color:#ffffff !important;
+  border-color: rgba(77,171,247,0.65);
+  box-shadow: 0 10px 26px rgba(0,0,0,.35);
+  background: rgba(255,255,255,0.06) !important;
+}
+
+button.intro-cta:hover::before{
+  transform: translateX(0%);
+}
+
+button.intro-cta:active{
+  transform: translateY(1px);
+}
+
+
 
       @media (max-width:768px){
         .site-footer__logo{ height:42px; }
@@ -255,26 +307,22 @@ ui <- bslib::page_navbar(
       }
     ")),
     tags$script(HTML("
-    // Show-once modal using sessionStorage (per tab/session)
-    Shiny.addCustomMessageHandler('mfap_show_intro', function(msg){
-      try {
-        const key = msg.key || 'mfap_intro_dismissed_v1';
-        const dismissed = sessionStorage.getItem(key) === '1';
-        if (!dismissed) {
-          const m = new bootstrap.Modal(document.getElementById('mfap_intro_modal'));
-          m.show();
-        }
-      } catch(e) {}
-    });
+  Shiny.addCustomMessageHandler('mfap_intro_once', function(msg){
+    const key = (msg && msg.key) ? msg.key : 'mfap_intro_dismissed_v1';
+    let dismissed = false;
+    try { dismissed = sessionStorage.getItem(key) === '1'; } catch(e) {}
+    if (dismissed) return;
 
-    // When user closes, persist dismissal
-    document.addEventListener('click', function(e){
-      const btn = e.target.closest('[data-intro-dismiss]');
-      if (!btn) return;
-      const key = btn.getAttribute('data-intro-key') || 'mfap_intro_dismissed_v1';
-      try { sessionStorage.setItem(key, '1'); } catch(e) {}
-    });
-  ")),
+    // trigger server to show the modal
+    Shiny.setInputValue('intro_show', Date.now(), {priority: 'event'});
+  });
+
+  Shiny.addCustomMessageHandler('mfap_intro_store', function(msg){
+    const key = (msg && msg.key) ? msg.key : 'mfap_intro_dismissed_v1';
+    try { sessionStorage.setItem(key, '1'); } catch(e) {}
+  });
+")),
+    
     tags$script(HTML("
       document.addEventListener('click', function(e){
         const btn = e.target.closest('[data-copy-target]');
@@ -522,46 +570,46 @@ ui <- bslib::page_navbar(
   ),
   # session dialogue #
   tags$div(
-  class = "modal fade",
-  id = "mfap_intro_modal",
-  tabindex = "-1",
-  tags$div(
-    class = "modal-dialog modal-lg modal-dialog-centered",
+    class = "modal fade",
+    id = "mfap_intro_modal",
+    tabindex = "-1",
     tags$div(
-      class = "modal-content",
-      tags$div(class="modal-header",
-        tags$h5(class="modal-title", "Welcome to MfAP"),
-        tags$button(
-          type="button", class="btn-close",
-          `data-bs-dismiss`="modal",
-          `data-intro-dismiss`="1",
-          `data-intro-key`="mfap_intro_dismissed_v1",
-          `aria-label`="Close"
-        )
-      ),
-      tags$div(class="modal-body",
-        tags$p("MfAP helps you quantify protein-level consequences of cDNA variants in single-exon genes."),
-        tags$ul(
-          tags$li(tags$b("Input:"), " HGVS cDNA variants (", tags$code("DNA_variant"), ") + reference CDS FASTA."),
-          tags$li(tags$b("Single-exon focus:"), " PTVs may evade NMD and yield truncated proteins."),
-          tags$li(tags$b("Imprinted genes:"), " only include variants on the expressed allele (e.g., paternal-only genes: upload paternal variants)."),
-          tags$li(tags$b("Privacy:"), " ensure compliance with your local policies; research-use only.")
+      class = "modal-dialog modal-lg modal-dialog-centered",
+      tags$div(
+        class = "modal-content",
+        tags$div(class="modal-header",
+                 tags$h5(class="modal-title", "Welcome to MfAP"),
+                 tags$button(
+                   type="button", class="btn-close",
+                   `data-bs-dismiss`="modal",
+                   `data-intro-dismiss`="1",
+                   `data-intro-key`="mfap_intro_dismissed_v1",
+                   `aria-label`="Close"
+                 )
         ),
-        tags$p(class="muted", "Tip: use “Load demo cohort” to see the expected file formats.")
-      ),
-      tags$div(class="modal-footer",
-        tags$button(
-          type="button", class="btn btn-secondary",
-          `data-bs-dismiss`="modal",
-          `data-intro-dismiss`="1",
-          `data-intro-key`="mfap_intro_dismissed_v1",
-          "Got it"
+        tags$div(class="modal-body",
+                 tags$p("MfAP helps you quantify protein-level consequences of cDNA variants in single-exon genes."),
+                 tags$ul(
+                   tags$li(tags$b("Input:"), " HGVS cDNA variants (", tags$code("DNA_variant"), ") + reference CDS FASTA."),
+                   tags$li(tags$b("Single-exon focus:"), " PTVs may evade NMD and yield truncated proteins."),
+                   tags$li(tags$b("Imprinted genes:"), " only include variants on the expressed allele (e.g., paternal-only genes: upload paternal variants)."),
+                   tags$li(tags$b("Privacy:"), " ensure compliance with your local policies; research-use only.")
+                 ),
+                 tags$p(class="muted", "Tip: use “Load demo cohort” to see the expected file formats.")
+        ),
+        tags$div(class="modal-footer",
+                 tags$button(
+                   type="button", class="btn btn-secondary",
+                   `data-bs-dismiss`="modal",
+                   `data-intro-dismiss`="1",
+                   `data-intro-key`="mfap_intro_dismissed_v1",
+                   "Got it"
+                 )
         )
       )
     )
-  )
-),
-
+  ),
+  
   
   # --- Footer spacer & footer ---
   tags$div(style="height:100px;"),
@@ -610,11 +658,112 @@ server <- function(input, output, session) {
     has_flank <- if (isTRUE(input$use_titer)) {!is.null(input$fasta_flank) || !is.null(example_fasta_flank_seq())} else TRUE
     shinyjs::toggleState("run", has_csv && has_fasta && has_flank)
   })
-
+  
   observeEvent(TRUE, {
-    session$sendCustomMessage("mfap_show_intro", list(key = "mfap_intro_dismissed_v1"))
+    # show-once per browser tab/session (sessionStorage)
+    session$sendCustomMessage("mfap_intro_once", list(key = "mfap_intro_dismissed_v1"))
   }, once = TRUE)
   
+  observeEvent(input$intro_dismiss, {
+    # persist dismissal in sessionStorage via JS
+    session$sendCustomMessage("mfap_intro_store", list(key = "mfap_intro_dismissed_v1"))
+  })
+  
+  observeEvent(input$intro_show, {
+    showModal(modalDialog(
+      title = NULL,                 
+      easyClose = TRUE,
+      size = "l",
+      footer = tagList(
+        actionButton("intro_dismiss", "Let's start →", class = "intro-cta")
+        
+      ),
+      
+      tags$div(
+        tags$p(tags$b("Welcome to MfAP 🗺!"),
+               style = "font-size:1.35rem; margin-bottom:10px;"),
+        
+        tags$p(
+          "MfAP helps you quantify protein-level consequences of cDNA variants in single-exon (i.e., intronless) genes."
+        ),
+        
+        tags$p(
+          "MfAP is built to support genotype–phenotype correlation studies. Upload a table (.csv format) where each row corresponds to an individual (or sample), and columns capture variants in HGVS annotation plus any phenotype or severity measures."
+        ),
+        
+        tags$div(
+          style = "border:1px solid rgba(255,255,255,.12); border-radius:10px;
+                 padding:10px 12px; margin:12px 0; background: rgba(0,0,0,.15);",
+          
+
+          tags$table(
+            class = "table table-sm table-dark",
+            style = paste(
+              "margin:0;",
+              "width:auto;",                 # don’t stretch full width
+              "display:inline-table;",       # keep it compact
+              "font-size:0.85rem;",          # smaller text
+              "line-height:1.1;"             # tighter rows
+            ),
+            tags$thead(
+              tags$tr(
+                tags$th("patient_ID", style="padding:2px 6px;"),
+                tags$th("DNA_variant", style="padding:2px 6px;"),
+                tags$th("severity", style="padding:2px 6px;"),
+                tags$th("…", style="padding:2px 6px;")
+              )
+            ),
+            tags$tbody(
+              tags$tr(
+                tags$td("P001", style="padding:2px 6px;"),
+                tags$td("c.123delA", style="padding:2px 6px;"),
+                tags$td("0.2", style="padding:2px 6px;"),
+                tags$td("…", style="padding:2px 6px;")
+              ),
+              tags$tr(
+                tags$td("P002", style="padding:2px 6px;"),
+                tags$td("c.456C>T", style="padding:2px 6px;"),
+                tags$td("0.8", style="padding:2px 6px;"),
+                tags$td("…", style="padding:2px 6px;")
+              ),
+              tags$tr(
+                tags$td("P003", style="padding:2px 6px;"),
+                tags$td("c.89_90insG", style="padding:2px 6px;"),
+                tags$td("0.1", style="padding:2px 6px;"),
+                tags$td("…", style="padding:2px 6px;")
+              ),
+              tags$tr(
+                tags$td("…", style="padding:2px 6px;"),
+                tags$td("…", style="padding:2px 6px;"),
+                tags$td("…", style="padding:2px 6px;"),
+                tags$td("…", style="padding:2px 6px;")
+              )
+            )
+          ),
+          
+          tags$div(
+            class = "muted",
+            style = "margin-top:6px; font-size:0.92rem;",
+            "This is an example to explain the table structure. Add as many additional rows and columns as needed."
+          )
+        ),
+        
+        tags$p(
+          tags$b("Imprinted genes: "),
+          "If your gene is imprinted, only include variants on the expressed allele, i.e. the allele that is transcriptionally active in the relevant biological context."
+        ),
+        tags$p(class = "muted", "Tip: use “Load demo cohort” to test out MfAP!")
+      )
+    ))
+  }, ignoreInit = TRUE)
+  
+  
+  observeEvent(input$intro_dismiss, {
+    removeModal()
+    session$sendCustomMessage("mfap_intro_store", list(key = "mfap_intro_dismissed_v1"))
+  }, ignoreInit = TRUE)
+  
+ 
   observeEvent(input$clear_uploads, {
     shinyjs::reset("csv"); shinyjs::reset("fasta"); shinyjs::reset("fasta_flank")
     example_csv(NULL); example_fasta_seq(NULL); example_fasta_flank_seq(NULL)
@@ -682,7 +831,7 @@ server <- function(input, output, session) {
       )
     ))
   })
-
+  
   
   observeEvent(input$add_dom, {
     req(input$dom_name, input$dom_start)
