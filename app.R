@@ -494,7 +494,7 @@ button.intro-cta:active{
             ),
             div(class="action-dock",
                 div(class="action-row",
-                    actionButton("run", "Run analysis", icon=icon("play"), class="btn btn-success"),
+                    actionButton("run", "Analyze", icon=icon("play"), class="btn btn-success"),
                     actionButton("cancel", "Cancel", class="btn btn-danger")
                 )
             )
@@ -1409,7 +1409,7 @@ Eine permanente inhaltliche Kontrolle der verlinkten Seiten ist jedoch ohne konk
         tags$p(style="margin:0 0 6px 0; font-weight:600; font-size:1.05rem;",
                "No results to be displayed, yet."),
         tags$p(style="margin:0;",
-               "Insert data on the left and click “Run analysis”. Your results will appear here.")
+               "Insert data on the left and click “Analyze”. Your results will appear here.")
       
       
       )
