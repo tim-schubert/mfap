@@ -144,6 +144,16 @@ refine_indel <- function(mt, del, dup, ins) {
 #------------------------------------------------------------------------------#
 # UI 
 #------------------------------------------------------------------------------#
+mfap <- function(){
+  tags$span(
+    class="mfap-brand",
+    tags$span("M"),
+    tags$span(class="mfap-f","f"),
+    tags$span("AP")
+  )
+}
+
+
 ui <- tagList(
     bslib::page_navbar(
       fillable = FALSE,
@@ -153,12 +163,44 @@ ui <- tagList(
         
     class = "brand",
     style = "display:flex;flex-direction:column;line-height:1.05;align-items:flex-start;padding-right:32px;",
-    tags$span(class="brand-title",   "MfAP 🗺"),
+    tags$span(
+      class = "brand-title",
+      tags$span("M"),
+      tags$span(class="mfap-f","f"),
+      tags$span("AP")
+    ),
+    
     tags$span(class="brand-subtitle","Molecular feature Association Pipeline")
   ),
   theme = bslib::bs_theme(version = 5, bootswatch = "darkly"),
   window_title = "MfAP — Molecular feature Association Pipeline",
   header = tags$head(
+    tags$link(
+      rel = "stylesheet",
+      href = "https://fonts.googleapis.com/css2?family=Libre+Bodoni:ital,wght@0,700;0,800;1,700;1,800&display=swap"
+    ),
+    tags$script(HTML("
+      Shiny.addCustomMessageHandler('mfap_intro_modal_class', function(msg){
+        var m = document.getElementById('shiny-modal');
+        if (!m) return;
+      
+        if (msg && msg.on) {
+          m.classList.add('mfap-intro-modal');
+      
+          try {
+            $(m).off('hidden.bs.modal.mfapCenterFix').on('hidden.bs.modal.mfapCenterFix', function(){
+              m.classList.remove('mfap-intro-modal');
+              $(m).off('hidden.bs.modal.mfapCenterFix');
+            });
+          } catch(e) {}
+        }
+      });
+
+    ")),
+      
+    
+    
+    
     tags$style(HTML("
     
       .page-container{max-width:1180px;margin:0 auto;padding:0 14px;}
@@ -166,17 +208,67 @@ ui <- tagList(
       .lit-item p{ margin:0 0 6px 0; }
       .navbar{background:#1d1f21 !important;border-bottom:1px solid rgba(255,255,255,.08)!important;box-shadow:none !important;}
       .navbar-brand{margin-right:auto;}
+      :root{
+        --mfap-font: 'Libre Bodoni', Georgia, 'Times New Roman', serif;
+      }
+      
+      #shiny-modal.mfap-intro-modal{
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+      }
+      
+      #shiny-modal.mfap-intro-modal .modal-dialog{
+        margin: 0 !important;
+        max-width: 760px;
+        width: calc(100% - 2rem);
+      }
+
+
+      
+      .mfap-brand{
+        font-family: var(--mfap-font);
+        font-weight: 700;
+        letter-spacing: .12px;
+        color: inherit;
+      }
+      
+      .mfap-brand .mfap-f{
+        font-style: italic;
+      }
+
       .brand-title{
-        font-weight: 900;
-        font-size: 1.85rem;
+        font-family: var(--mfap-font);
+        font-weight: 800;
         letter-spacing: .2px;
-        color:#fff !important;
+        color: #ffffff !important;
+        font-size: 2.2rem;
+        line-height: 1.05;
       }
+      
+      @media (max-width: 768px){
+        .brand-title{
+          font-size: 1.75rem;
+        }
+      }
+      
       .brand-subtitle{
-        font-size: 1.08rem;
-        color:#e5e7eb !important;
+        font-family: inherit;
+        font-weight: 400;
+        font-size: 1.05rem;
+        color: #e5e7eb !important;
         margin-top: 2px;
+        letter-spacing: 0;
       }
+
+      .mfap-f{
+        font-style: italic;
+        font-weight: inherit;
+        margin: 0 -0.03em;   /* optical kerning tweak */
+      }
+
+
+
       a{
         color:#4dabf7;
         text-decoration: none;
@@ -550,13 +642,13 @@ button.intro-cta:active{
                  bslib::card(
                    bslib::card_header("Overview"),
                    bslib::card_body(
-                     p("MfAP is a framework developed by Tim Schubert and colleagues at the Institute of Human Genetics of Heidelberg University (Germany), which allows users to calculate and predict DNA and protein level consequences of genetic variation in single-exon genes. MfAP requires minimal user input: a list of variants in HGVS cDNA notation and the reference DNA sequence of the gene of interest.")
+                     p(mfap()," is a framework developed by Tim Schubert and colleagues at the Institute of Human Genetics of Heidelberg University (Germany), which allows users to calculate and predict DNA and protein level consequences of genetic variation in single-exon genes. ",mfap()," requires minimal user input: a list of variants in HGVS cDNA notation and the reference DNA sequence of the gene of interest.")
                    )
                  ),
                  bslib::card(
                    bslib::card_header("Rationale"),
                    bslib::card_body(
-                     p("Protein-truncating variants (PTVs) canonically lead to nonsense-mediated mRNA decay. This process necessitates an exon-exon junction, which is lacking in single-exon genes. Therefore, PTVs in single-exon genes can result in a truncated protein that may have dominant-negative, gain-of-function, or neomorphic effects. In our accompanying manuscript, we demonstrate that MfAP-predicted protein-level attributes of such truncated proteins provide a stronger causal link between genotype and phenotypic severity."),
+                     p("Protein-truncating variants (PTVs) canonically lead to nonsense-mediated mRNA decay. This process necessitates an exon-exon junction, which is lacking in single-exon genes. Therefore, PTVs in single-exon genes can result in a truncated protein that may have dominant-negative, gain-of-function, or neomorphic effects. In our accompanying manuscript, we demonstrate that ",mfap(),"-predicted protein-level attributes of such truncated proteins provide a stronger causal link between genotype and phenotypic severity."),
                      tags$figure(
                        tags$img(
                          src = "https://lh3.googleusercontent.com/d/1gDNYo7HuDE4md9mvPLc4yiQXgOnl29Ly",
@@ -574,7 +666,7 @@ button.intro-cta:active{
                  bslib::card(
                    bslib::card_header("Workflow"),
                    bslib::card_body(
-                     p("MfAP outputs calculations and predictions of the effects of variants on the DNA and protein level, including predictions of non-canonical translation initiation sites (TISs) and resulting proteins. For more information and inspiration for downstream analyses, please read the accompanying paper."),
+                     p("",mfap()," outputs calculations and predictions of the effects of variants on the DNA and protein level, including predictions of non-canonical translation initiation sites (TISs) and resulting proteins. For more information and inspiration for downstream analyses, please read the accompanying paper."),
                      tags$figure(
                        tags$img(
                          src = "https://lh3.googleusercontent.com/d/1h-h2yfvsKnxscA3ko8VyeFXkPaa9iAkE",
@@ -583,7 +675,7 @@ button.intro-cta:active{
                          loading = "lazy"
                        ),
                        tags$figcaption(
-                         "Figure: MfAP workflow. Figure created with Biorender.com",
+                         "Figure: ",mfap()," workflow. Figure created with Biorender.com",
                          style="text-align:center;color:#cfd4da;font-size:.9em;margin-top:6px;"
                        )
                      )
@@ -961,7 +1053,6 @@ server <- function(input, output, session) {
   }, ignoreInit = TRUE)
   
   
-  # Helper to show the modal (reused by both triggers)
   show_intro_modal <- function() {
     showModal(modalDialog(
       title = NULL,
@@ -971,15 +1062,15 @@ server <- function(input, output, session) {
         actionButton("intro_dismiss", "Let's start →", class = "intro-cta")
       ),
       tags$div(
-        tags$p(tags$b("Welcome to MfAP 🗺!"),
+        tags$p(tags$b("Welcome to ",mfap(),"!"),
                style = "font-size:1.35rem; margin-bottom:10px;"),
         
         tags$p(
-          "MfAP helps you quantify protein-level consequences of cDNA variants in single-exon (i.e., intronless) genes."
+          mfap()," helps you quantify protein-level consequences of cDNA variants in single-exon (i.e., intronless) genes."
         ),
         
         tags$p(
-          "MfAP is built to support genotype–phenotype correlation studies. Upload a table (.csv format) where each row corresponds to an individual (or sample), and columns capture variants in HGVS annotation plus any phenotype or severity measures."
+          mfap()," is built to support genotype–phenotype correlation studies. Upload a table (.csv format) where each row corresponds to an individual (or sample), and columns capture variants in HGVS annotation plus any phenotype or severity measures."
         ),
         
         tags$div(
@@ -1042,9 +1133,11 @@ server <- function(input, output, session) {
           tags$b("Imprinted genes: "),
           "If your gene is imprinted, only include variants on the expressed allele, i.e. the allele that is transcriptionally active in the relevant biological context."
         ),
-        tags$p(class = "muted", "Tip: use “Load demo cohort” to test out MfAP!")
+        tags$p(class = "muted", "Tip: use “Load demo cohort” to test out ",mfap(),"!")
       )
     ))
+    session$sendCustomMessage("mfap_intro_modal_class", list(on = TRUE))
+    
   }
   
   # Show once per browser tab (sessionStorage lives on the client)
@@ -1067,6 +1160,7 @@ server <- function(input, output, session) {
     removeModal()
     session$sendCustomMessage("mfap_intro_store", list(key = "mfap_intro_dismissed_v1"))
   }, ignoreInit = TRUE)
+  
   
  
   observeEvent(input$clear_uploads, {
