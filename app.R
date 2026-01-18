@@ -402,6 +402,8 @@ button.intro-cta:active{
               bslib::card_header("Upload"),
               bslib::card_body(
                 uiOutput("csv_ui"),
+                uiOutput("csv_status"),
+                
                 tags$details(
                   tags$summary("File requirements ▿"),
                   tags$div(class="muted", style="font-size:0.9em;",
@@ -414,7 +416,9 @@ button.intro-cta:active{
                            )))
                 ),
                 div(style="height:8px;"),
+                
                 uiOutput("fasta_ui"),
+                uiOutput("fasta_status"),
                 tags$details(
                   tags$summary("Obtaining a FASTA ▿"),
                   tags$div(class="muted", style="font-size:0.9em;",
@@ -435,6 +439,7 @@ button.intro-cta:active{
                 conditionalPanel(
                   condition = "input.use_titer == true",
                   uiOutput("fasta_flank_ui"),
+                  uiOutput("fasta_flank_status"),
                   tags$details(
                     tags$summary("Obtaining a FASTA with flanks ▿"),
                     tags$div(class="muted", style="font-size:0.9em;",
@@ -453,20 +458,24 @@ button.intro-cta:active{
             bslib::card(
               bslib::card_header("Domains"),
               bslib::card_body(
-                fluidRow(column(6, textInput("dom_name","Name")),
-                         column(6, numericInput("dom_start","Start (AA)",1,min=1))),
-                fluidRow(column(6, numericInput("dom_end","End (AA)",1,min=1)),
-                         column(6, checkboxInput("dom_to_end","to end", FALSE))),
-                fluidRow(column(6, actionButton("add_dom","Add", class="btn btn-info")),
-                         column(6, actionButton("clr_dom","Clear", class="btn btn-secondary"))),
+                fluidRow(
+                  column(4, textInput("dom_name","Name")),
+                  column(4, numericInput("dom_start","Start AA", 1, min = 1)),
+                  column(4, numericInput("dom_end","End AA", 1, min = 1))
+                ),
+                fluidRow(
+                  column(6, actionButton("add_dom","Add", class="btn btn-info")),
+                  column(6, actionButton("clr_dom","Clear", class="btn btn-secondary"))
+                ),
                 tableOutput("dom_tbl") %>% tagAppendAttributes(style="font-size:0.9em; margin-top:8px;")
               )
             ),
+            
             bslib::card(
               bslib::card_header("Motifs"),
               bslib::card_body(
                 fluidRow(column(6, textInput("mot_name","Name")),
-                         column(6, textInput("mot_pattern","Pattern (AA sequence)"))),
+                         column(6, textInput("mot_pattern","AA sequence"))),
                 fluidRow(column(6, actionButton("add_mot","Add", class="btn btn-info")),
                          column(6, actionButton("clr_mot","Clear", class="btn btn-secondary"))),
                 tableOutput("mot_tbl") %>% tagAppendAttributes(style="font-size:0.9em; margin-top:8px;")
@@ -478,7 +487,7 @@ button.intro-cta:active{
                 tags$p(class="muted", style="font-size:0.9em;",
                        "Load a fictional cohort with example variants, reference sequences, and example domains/motifs."),
                 fluidRow(
-                  column(6, actionButton("load_example_data", "Load demo cohort", class="btn btn-dark")),
+                  column(6, actionButton("load_example_data", "Load demo", class="btn btn-dark")),
                   column(6, actionButton("clear_example_data", "Clear demo", class="btn btn-secondary"))
                 )
               )
@@ -507,13 +516,13 @@ button.intro-cta:active{
                 ),
                 
                 tags$div(
-                  class = "cite-row",
+                  class = "muted",
                   tags$span(strong("Please cite:"), "Schubert et al. (2025) ·"),
                   actionLink("show_bib", label = "BibTeX", class = "bib-link")
                 ),
                 
                 tags$div(
-                  class = "cite-row",
+                  class = "muted",
                   tags$span("If using TITER, please additionally cite Zhang et al. (2017)"),
                   "·",
                   actionLink("show_titer_bibtex", label = "BibTeX", class = "bib-link")
@@ -674,8 +683,180 @@ server <- function(input, output, session) {
   example_fasta_flank_seq <- reactiveVal(NULL)
   example_domains <- data.frame(Name=c("DomainA","DomainB"), Start=c(5,50), End=c(20,100), stringsAsFactors=FALSE)
   example_motifs  <- data.frame(Name=c("MotifX","MotifY"),  Pattern=c("ACDE","WXYZ"), stringsAsFactors=FALSE)
+  csv_df_norm    <- reactiveVal(NULL)
+  csv_ok         <- reactiveVal(FALSE)
+  csv_msg        <- reactiveVal("")
+  csv_renames    <- reactiveVal(character())
+  
+  fasta_ok       <- reactiveVal(FALSE)
+  fasta_msg      <- reactiveVal("")
+  flank_ok       <- reactiveVal(FALSE)
+  flank_msg      <- reactiveVal("")
+  
+  canon_key <- function(x) tolower(gsub("[^a-z0-9]+", "", trimws(x)))
+  
+  normalize_columns <- function(df) {
+    stopifnot(is.data.frame(df))
+    cn <- colnames(df)
+    ck <- canon_key(cn)
+    
+    aliases <- list(
+      patient_ID  = c("patientid","patient_id","patient","sampleid","sample_id","individualid","individual_id","subjectid","subject_id","id"),
+      DNA_variant = c("dnavariant","dna_variant","variant","variants","cdnvariant","cdna_variant","hgvs","hgvsc","hgvs_cdna","cvariant","c_variant","dnachange","dna_change")
+    )
+    
+    find_best <- function(target) {
+      hits <- which(ck %in% aliases[[target]] | ck == canon_key(target))
+      if (length(hits) == 0) return(NA_integer_)
+      if (length(hits) > 1) {
+        stop(sprintf("Ambiguous column mapping for %s. Candidates: %s", target, paste(cn[hits], collapse = ", ")))
+      }
+      hits[1]
+    }
+    
+    renames <- c()
+    i_pat <- find_best("patient_ID")
+    if (!is.na(i_pat) && cn[i_pat] != "patient_ID") {
+      renames[cn[i_pat]] <- "patient_ID"
+      cn[i_pat] <- "patient_ID"
+    }
+    i_var <- find_best("DNA_variant")
+    if (!is.na(i_var) && cn[i_var] != "DNA_variant") {
+      renames[cn[i_var]] <- "DNA_variant"
+      cn[i_var] <- "DNA_variant"
+    }
+    
+    colnames(df) <- cn
+    list(df = df, renames = renames)
+  }
+  
+  variant_issue <- function(x) {
+    if (is.na(x) || !nzchar(trimws(x))) return("Missing/empty variant")
+    x0 <- trimws(x)
+    if (grepl("\\s", x0)) return("Contains whitespace (remove spaces)")
+    if (grepl("[\\+\\-\\*\\(\\)\\?]", x0)) return("Contains intronic/UTR/uncertain HGVS characters (+, -, *, ?, parentheses)")
+    x <- gsub("\\s+", "", x0)
+    x2 <- sub("^(c\\.)", "", x, ignore.case = TRUE)
+    
+    if (grepl("^\\d+[ACGTNacgtn]>[ACGTNacgtn]$", x2)) return("")
+    if (grepl("^\\d+(?:_\\d+)?del[ACGTNacgtn]*$", x2)) return("")
+    if (grepl("^\\d+(?:_\\d+)?dup[ACGTNacgtn]*$", x2)) return("")
+    if (grepl("^\\d+(?:_\\d+)?ins[ACGTNacgtn]+$", x2)) return("")
+    if (grepl("^\\d+(?:_\\d+)?delins[ACGTNacgtn]+$", x2)) return("")
+    
+    
+    "Unrecognized HGVS cDNA pattern."
+  }
+  
+  parse_hgvs_minimal <- function(x) {
+    x <- gsub("\\s+", "", trimws(x))
+    x2 <- sub("^(c\\.)", "", x, ignore.case = TRUE)
+    
+    if (grepl(">", x2)) {
+      m <- regexec("^(\\d+)([ACGTNacgtn])>([ACGTNacgtn])$", x2)
+      r <- regmatches(x2, m)[[1]]
+      if (length(r) == 4) return(list(type="snv", start=as.integer(r[2]), end=as.integer(r[2]), ref=toupper(r[3]), alt=toupper(r[4])))
+      return(NULL)
+    }
+    
+    m <- regexec("^(\\d+)(?:_(\\d+))?(delins)([ACGTNacgtn]+)$", x2)
+    r <- regmatches(x2, m)[[1]]
+    if (length(r) == 5) {
+      s <- as.integer(r[2]); e <- ifelse(nzchar(r[3]), as.integer(r[3]), s)
+      return(list(type="delins", start=s, end=e, ins=toupper(r[5])))
+    }
+    
+    m <- regexec("^(\\d+)(?:_(\\d+))?(del)([ACGTNacgtn]*)$", x2)
+    r <- regmatches(x2, m)[[1]]
+    if (length(r) == 5) {
+      s <- as.integer(r[2]); e <- ifelse(nzchar(r[3]), as.integer(r[3]), s)
+      return(list(type="del", start=s, end=e))
+    }
+    
+    m <- regexec("^(\\d+)(?:_(\\d+))?(dup)([ACGTNacgtn]*)$", x2)
+    r <- regmatches(x2, m)[[1]]
+    if (length(r) == 5) {
+      s <- as.integer(r[2]); e <- ifelse(nzchar(r[3]), as.integer(r[3]), s)
+      return(list(type="dup", start=s, end=e))
+    }
+    
+    m <- regexec("^(\\d+)(?:_(\\d+))?(ins)([ACGTNacgtn]+)$", x2)
+    r <- regmatches(x2, m)[[1]]
+    if (length(r) == 5) {
+      s <- as.integer(r[2]); e <- ifelse(nzchar(r[3]), as.integer(r[3]), s)
+      return(list(type="ins", start=s, end=e, ins=toupper(r[5])))
+    }
+    
+    NULL
+  }
+  
+  validate_variants_against_ref <- function(v, ref_seq) {
+    n <- nchar(ref_seq)
+    probs <- character(length(v))
+    
+    for (i in seq_along(v)) {
+      hg <- v[i]
+      p <- parse_hgvs_minimal(hg)
+      if (is.null(p)) {
+        probs[i] <- paste0("Could not interpret variant for semantic checks: ", hg)
+        next
+      }
+      
+      if (is.na(p$start) || is.na(p$end)) {
+        probs[i] <- paste0("Invalid coordinates: ", hg)
+        next
+      }
+      
+      if (p$start < 1 || p$end < 1) {
+        probs[i] <- paste0("Position < 1: ", hg)
+        next
+      }
+      
+      if (p$start > p$end) {
+        probs[i] <- paste0("Invalid range (start > end): ", hg)
+        next
+      }
+      
+      if (p$end > n) {
+        probs[i] <- paste0("Position out of CDS bounds (", p$end, " > ", n, "): ", hg)
+        next
+      }
+      
+      if (identical(p$type, "snv")) {
+        ref_base <- substr(ref_seq, p$start, p$start)
+        if (toupper(ref_base) != toupper(p$ref)) {
+          probs[i] <- paste0("Reference-base mismatch at c.", p$start, " (FASTA=", toupper(ref_base), ", variant=", toupper(p$ref), "): ", hg)
+          next
+        }
+      }
+      
+      probs[i] <- ""
+    }
+    
+    probs
+  }
+  
+  parse_mutation_strict <- function(mutation, wildtype_seq) {
+    info <- parse_mutation(mutation, wildtype_seq)
+    ok <- !is.na(info$Locus) && !is.na(info$Mutation_Type) && !is.na(info$Mutated_Sequence) && nzchar(info$Mutated_Sequence)
+    if (!ok) stop(paste0("Could not parse variant: ", mutation))
+    info
+  }
+  
+  translate_prot_strict <- function(dna_seq, variant_label = NA_character_) {
+    if (is.na(dna_seq) || !nzchar(dna_seq) || nchar(dna_seq) < 3) {
+      stop(paste0("Protein translation failed (empty/too short sequence) for variant: ", variant_label))
+    }
+    aa <- suppressWarnings(as.character(translate(DNAString(dna_seq), if.fuzzy.codon="X")))
+    if (is.na(aa) || !nzchar(aa)) stop(paste0("Protein translation failed for variant: ", variant_label))
+    if (grepl("\\*", aa)) substr(aa, 1, regexpr("\\*", aa)[1]-1) else aa
+  }
+  
+  
+  
   domains <- reactiveVal(data.frame(Name=character(),Start=integer(),End=numeric(),stringsAsFactors=FALSE))
   motifs  <- reactiveVal(data.frame(Name=character(),Pattern=character(),stringsAsFactors=FALSE))
+  
   wt_aa_len <- reactiveVal(NULL)
   
   result_data <- reactiveVal(NULL)
@@ -687,9 +868,98 @@ server <- function(input, output, session) {
   observe({
     has_csv   <- !is.null(input$csv)   || !is.null(example_csv())
     has_fasta <- !is.null(input$fasta) || !is.null(example_fasta_seq())
-    has_flank <- if (isTRUE(input$use_titer)) {!is.null(input$fasta_flank) || !is.null(example_fasta_flank_seq())} else TRUE
-    shinyjs::toggleState("run", has_csv && has_fasta && has_flank)
+    has_flank_file <- if (isTRUE(input$use_titer)) {!is.null(input$fasta_flank) || !is.null(example_fasta_flank_seq())} else TRUE
+    
+    csv_ready   <- if (!is.null(example_csv())) TRUE else (has_csv && isTRUE(csv_ok()))
+    fasta_ready <- if (!is.null(example_fasta_seq())) TRUE else (has_fasta && isTRUE(fasta_ok()))
+    flank_ready <- if (!isTRUE(input$use_titer)) TRUE else (if (!is.null(example_fasta_flank_seq())) TRUE else (has_flank_file && isTRUE(flank_ok())))
+    
+    shinyjs::toggleState("run", csv_ready && fasta_ready && flank_ready)
   })
+  
+  
+  observeEvent(input$csv, {
+    csv_ok(FALSE); csv_msg(""); csv_renames(character()); csv_df_norm(NULL)
+    
+    if (is.null(input$csv)) return()
+    
+    vd_raw <- tryCatch(
+      read.csv(input$csv$datapath, stringsAsFactors = FALSE),
+      error = function(e) e
+    )
+    if (inherits(vd_raw, "error")) { csv_msg(paste0("Could not read CSV: ", vd_raw$message)); return() }
+    if (nrow(vd_raw) == 0) { csv_msg("CSV has zero rows."); return() }
+    
+    norm <- tryCatch(normalize_columns(vd_raw), error = function(e) e)
+    if (inherits(norm, "error")) { csv_msg(norm$message); return() }
+    
+    vd <- norm$df
+    csv_df_norm(vd)
+    
+    missing <- setdiff(c("patient_ID", "DNA_variant"), colnames(vd))
+    if (length(missing)) { csv_msg(paste0("Missing required column(s): ", paste(missing, collapse = ", "))); return() }
+    
+    miss_pid <- sum(is.na(vd$patient_ID) | !nzchar(trimws(vd$patient_ID)))
+    if (miss_pid > 0) { csv_msg(paste0("Missing/empty values in patient_ID: ", miss_pid)); return() }
+    
+    miss_var <- sum(is.na(vd$DNA_variant) | !nzchar(trimws(vd$DNA_variant)))
+    if (miss_var > 0) { csv_msg(paste0("Missing/empty values in DNA_variant: ", miss_var)); return() }
+    
+    dup_pid <- sum(duplicated(vd$patient_ID))
+    if (dup_pid > 0) { csv_msg(paste0("Duplicated patient_ID values: ", dup_pid)); return() }
+    
+    issues <- vapply(vd$DNA_variant, variant_issue, character(1))
+    bad <- which(!is.na(issues) & issues != "")
+    if (length(bad)) {
+      i <- bad[1]
+      csv_msg(paste0("Variant issue in ", length(bad), " row(s). Example row ", i, " (", vd$DNA_variant[i], "): ", issues[i]))
+      return()
+    }
+    
+    if (length(norm$renames)) {
+      csv_renames(norm$renames)
+      showNotification(
+        paste0("Mapped columns: ", paste0(names(norm$renames), " → ", unname(norm$renames), collapse = ", ")),
+        type = "message"
+      )
+    }
+    
+    csv_ok(TRUE)
+    csv_msg("File OK ✓")
+  }, ignoreInit = TRUE)
+  
+  
+  observeEvent(input$fasta, {
+    fasta_ok(FALSE); fasta_msg("")
+    if (is.null(input$fasta)) return()
+    
+    lines <- tryCatch(readLines(input$fasta$datapath, warn = FALSE), error = function(e) e)
+    if (inherits(lines, "error")) { fasta_msg(paste0("Could not read FASTA: ", lines$message)); return() }
+    if (!any(startsWith(lines, ">"))) { fasta_msg("Invalid FASTA: missing header line starting with '>'"); return() }
+    
+    seq_nt <- toupper(paste(lines[!startsWith(lines, ">")], collapse = ""))
+    if (!nzchar(seq_nt)) { fasta_msg("Invalid FASTA: sequence is empty."); return() }
+    if (nchar(seq_nt) %% 3 != 0) { fasta_msg("FASTA OK, but CDS length is not divisible by 3."); return() }
+    
+    fasta_ok(TRUE)
+    fasta_msg("File OK ✓")
+  }, ignoreInit = TRUE)
+  
+  observeEvent(input$fasta_flank, {
+    flank_ok(FALSE); flank_msg("")
+    if (is.null(input$fasta_flank)) return()
+    
+    lines <- tryCatch(readLines(input$fasta_flank$datapath, warn = FALSE), error = function(e) e)
+    if (inherits(lines, "error")) { flank_msg(paste0("Could not read FASTA: ", lines$message)); return() }
+    if (!any(startsWith(lines, ">"))) { flank_msg("Invalid FASTA: missing header line starting with '>'"); return() }
+    
+    seq_nt <- toupper(paste(lines[!startsWith(lines, ">")], collapse = ""))
+    if (!nzchar(seq_nt)) { flank_msg("Invalid FASTA: sequence is empty."); return() }
+    
+    flank_ok(TRUE)
+    flank_msg("File OK ✓")
+  }, ignoreInit = TRUE)
+  
   
   # Helper to show the modal (reused by both triggers)
   show_intro_modal <- function() {
@@ -802,8 +1072,13 @@ server <- function(input, output, session) {
   observeEvent(input$clear_uploads, {
     shinyjs::reset("csv"); shinyjs::reset("fasta"); shinyjs::reset("fasta_flank")
     example_csv(NULL); example_fasta_seq(NULL); example_fasta_flank_seq(NULL)
-    result_data(NULL); shinyjs::disable("run"); shinyjs::disable("cancel")
+    csv_df_norm(NULL); csv_ok(FALSE); csv_msg(""); csv_renames(character())
+    fasta_ok(FALSE); fasta_msg("")
+    flank_ok(FALSE); flank_msg("")
+    result_data(NULL)
+    shinyjs::disable("run"); shinyjs::disable("cancel")
   })
+  
   
   observeEvent(input$load_example_data, {
     example_csv(read.csv("www/example_variants.csv", stringsAsFactors=FALSE))
@@ -869,34 +1144,24 @@ server <- function(input, output, session) {
   
   
   observeEvent(input$add_dom, {
-    req(input$dom_name, input$dom_start)
-    
-    max_aa <- wt_aa_len()
-    
-    # Decide end value robustly
-    if (isTRUE(input$dom_to_end)) {
-      if (is.null(max_aa) || is.na(max_aa) || !is.finite(max_aa)) {
-        showNotification("Protein length unknown. Load FASTA or run analysis first (so 'to end' can resolve).", type = "error")
-        return()
-      }
-      end_val <- as.integer(max_aa)
-    } else {
-      if (is.null(input$dom_end) || is.na(input$dom_end)) {
-        showNotification("Please provide a domain end position.", type = "error")
-        return()
-      }
-      end_val <- as.integer(input$dom_end)
-    }
+    req(input$dom_name, input$dom_start, input$dom_end)
     
     start_val <- as.integer(input$dom_start)
+    end_val   <- as.integer(input$dom_end)
     
-    # Basic sanity checks
-    if (!is.null(max_aa) && end_val > max_aa) {
-      showNotification(paste0("Domain end (", end_val, ") exceeds protein length (", max_aa, ")."), type = "error")
+    if (is.na(start_val) || is.na(end_val)) {
+      showNotification("Please provide valid numeric Start and End positions.", type = "error")
       return()
     }
-    if (!is.null(max_aa) && (start_val < 1 || end_val < 1 || start_val > end_val)) {
+    
+    if (start_val < 1 || end_val < 1 || start_val > end_val) {
       showNotification("Domain coordinates must be within [1, end] and Start ≤ End.", type = "error")
+      return()
+    }
+    
+    max_aa <- wt_aa_len()
+    if (!is.null(max_aa) && !is.na(max_aa) && is.finite(max_aa) && end_val > max_aa) {
+      showNotification(paste0("Domain end (", end_val, ") exceeds protein length (", max_aa, ")."), type = "error")
       return()
     }
     
@@ -906,16 +1171,15 @@ server <- function(input, output, session) {
       return()
     }
     
-    # Ensure correct column types
-    new_row <- data.frame(
+    domains(rbind(df, data.frame(
       Name  = as.character(input$dom_name),
       Start = start_val,
       End   = end_val,
       stringsAsFactors = FALSE
-    )
-    
-    domains(rbind(df, new_row))
+    )))
   })
+  
+  
   observeEvent(input$clr_dom, domains(data.frame(Name=character(),Start=integer(),End=numeric(),stringsAsFactors=FALSE)))
   output$dom_tbl <- renderTable(domains(), striped=TRUE, hover=TRUE)
   
@@ -1160,24 +1424,103 @@ Eine permanente inhaltliche Kontrolle der verlinkten Seiten ist jedoch ohne konk
   observeEvent(input$run, {
     cancel_requested(FALSE); shinyjs::disable("run"); shinyjs::enable("cancel"); shinyjs::hide("res_tbl")
     req(!is.null(input$csv) || !is.null(example_csv()))
-    vd <- if (!is.null(input$csv)) read.csv(input$csv$datapath, stringsAsFactors=FALSE) else example_csv()
-    if (nrow(vd)==0) {showModal(modalDialog(title="Empty CSV","Your variant list file has zero rows.", easyClose=TRUE, footer=modalButton("OK"))); result_data(NULL); return(NULL)}
-    if (!"DNA_variant" %in% colnames(vd)) {showModal(modalDialog(title="Missing column","Your CSV must contain a column named `DNA_variant`.", easyClose=TRUE, footer=modalButton("OK"))); result_data(NULL); return(NULL)}
-    if (isTRUE(input$use_titer)) {
-      if (!"patient_ID" %in% colnames(vd)) {showModal(modalDialog(title="Missing column","TITER analysis requires a `patient_ID` column.", easyClose=TRUE, footer=modalButton("OK"))); result_data(NULL); return(NULL)}
-      if (is.null(input$fasta_flank) && is.null(example_fasta_flank_seq())) {showModal(modalDialog(title="Missing FASTA","Upload the FASTA with ±100 bp flanks for TITER.", easyClose=TRUE, footer=modalButton("OK"))); result_data(NULL); return(NULL)}
+    vd <- if (!is.null(example_csv())) {
+      example_csv()
+    } else if (!is.null(csv_df_norm())) {
+      csv_df_norm()
+    } else {
+      read.csv(input$csv$datapath, stringsAsFactors=FALSE)
     }
+    
+    if (nrow(vd)==0) {
+      showModal(modalDialog(title="Empty CSV","Your variant list file has zero rows.", easyClose=TRUE, footer=modalButton("OK")))
+      result_data(NULL); shinyjs::disable("cancel"); shinyjs::enable("run"); return(NULL)
+    }
+    
+    if (!all(c("patient_ID","DNA_variant") %in% colnames(vd))) {
+      showModal(modalDialog(title="Missing column","Your CSV must contain columns `patient_ID` and `DNA_variant`.", easyClose=TRUE, footer=modalButton("OK")))
+      result_data(NULL); shinyjs::disable("cancel"); shinyjs::enable("run"); return(NULL)
+    }
+    
+    miss_pid <- sum(is.na(vd$patient_ID) | !nzchar(trimws(vd$patient_ID)))
+    if (miss_pid > 0) {
+      showModal(modalDialog(title="Missing values", paste0("patient_ID has ", miss_pid, " missing/empty values."), easyClose=TRUE, footer=modalButton("OK")))
+      result_data(NULL); shinyjs::disable("cancel"); shinyjs::enable("run"); return(NULL)
+    }
+    
+    miss_var <- sum(is.na(vd$DNA_variant) | !nzchar(trimws(vd$DNA_variant)))
+    if (miss_var > 0) {
+      showModal(modalDialog(title="Missing values", paste0("DNA_variant has ", miss_var, " missing/empty values."), easyClose=TRUE, footer=modalButton("OK")))
+      result_data(NULL); shinyjs::disable("cancel"); shinyjs::enable("run"); return(NULL)
+    }
+    
+    dup_pid <- sum(duplicated(vd$patient_ID))
+    if (dup_pid > 0) {
+      showModal(modalDialog(title="Duplicated IDs", paste0("patient_ID contains ", dup_pid, " duplicated value(s)."), easyClose=TRUE, footer=modalButton("OK")))
+      result_data(NULL); shinyjs::disable("cancel"); shinyjs::enable("run"); return(NULL)
+    }
+    
+    issues <- vapply(vd$DNA_variant, variant_issue, character(1))
+    bad <- which(!is.na(issues) & issues != "")
+    if (length(bad)) {
+      i <- bad[1]
+      showModal(modalDialog(
+        title="Variant format issue",
+        paste0("Example row ", i, " (", vd$DNA_variant[i], "): ", issues[i]),
+        easyClose=TRUE,
+        footer=modalButton("OK")
+      ))
+      result_data(NULL); shinyjs::disable("cancel"); shinyjs::enable("run"); return(NULL)
+    }
+    
+    if (isTRUE(input$use_titer)) {
+      if (is.null(input$fasta_flank) && is.null(example_fasta_flank_seq())) {
+        showModal(modalDialog(title="Missing FASTA","Upload the FASTA with ±100 bp flanks for TITER.", easyClose=TRUE, footer=modalButton("OK")))
+        result_data(NULL); shinyjs::disable("cancel"); shinyjs::enable("run"); return(NULL)
+      }
+    }
+    
     
     lines <- if (!is.null(input$fasta)) readLines(input$fasta$datapath, warn=FALSE) else c(">example", example_fasta_seq())
     if (!any(startsWith(lines, ">"))) {showModal(modalDialog(title="Invalid FASTA","FASTA must have at least one header line beginning with `>`.", easyClose=TRUE, footer=modalButton("OK"))); result_data(NULL); return(NULL)}
     seq_nt <- toupper(paste(lines[!startsWith(lines, ">")], collapse=""))
-    if (nchar(seq_nt) %% 3 != 0) {showModal(modalDialog(title="Sequence not multiple of 3","Reference length is not divisible by 3.", easyClose=TRUE, footer=modalButton("OK"))); result_data(NULL); return(NULL)}
-    aa_len <- nchar(Biostrings::translate(Biostrings::DNAString(seq_nt), if.fuzzy.codon="X")); wt_aa_len(aa_len)
+    if (nchar(seq_nt) %% 3 != 0) {
+      showModal(modalDialog(title="Sequence not multiple of 3","Reference length is not divisible by 3.", easyClose=TRUE, footer=modalButton("OK")))
+      result_data(NULL); shinyjs::disable("cancel"); shinyjs::enable("run"); return(NULL)
+    }
+    
+    probs <- validate_variants_against_ref(vd$DNA_variant, seq_nt)
+    bad_sem <- which(nzchar(probs))
+    if (length(bad_sem)) {
+      ex <- head(bad_sem, 8)
+      showModal(modalDialog(
+        title = "Variant validation failed",
+        easyClose = TRUE,
+        size = "l",
+        footer = modalButton("OK"),
+        tags$p("Some variants are incompatible with the provided CDS FASTA."),
+        tags$ul(lapply(ex, function(i) tags$li(paste0("Row ", i, " (", vd$DNA_variant[i], "): ", probs[i])))),
+        if (length(bad_sem) > length(ex)) tags$p(class="muted", paste0("... and ", length(bad_sem) - length(ex), " more.")) else NULL
+      ))
+      result_data(NULL); shinyjs::disable("cancel"); shinyjs::enable("run"); return(NULL)
+    }
+    
+    aa_len <- nchar(Biostrings::translate(Biostrings::DNAString(seq_nt), if.fuzzy.codon="X"))
+    wt_aa_len(aa_len)
+    
     
     withProgress(message="Running analysis...", value=0, {
       incProgress(0.1, detail="Parsing mutations")
       if (cancel_requested()) {showNotification("Analysis cancelled.", type="warning"); shinyjs::disable("cancel"); result_data(NULL); return(NULL)}
-      parsed <- lapply(vd$DNA_variant, parse_mutation, wildtype_seq=seq_nt)
+      parsed <- tryCatch(
+        lapply(vd$DNA_variant, parse_mutation_strict, wildtype_seq = seq_nt),
+        error = function(e) e
+      )
+      if (inherits(parsed, "error")) {
+        showModal(modalDialog(title="Variant parsing failed", parsed$message, easyClose=TRUE, footer=modalButton("OK")))
+        result_data(NULL); shinyjs::disable("cancel"); shinyjs::enable("run"); return(NULL)
+      }
+      
       df <- vd %>% dplyr::mutate(
         Locus=sapply(parsed, `[[`,"Locus"),
         Mutation_Type=sapply(parsed, `[[`,"Mutation_Type"),
@@ -1189,7 +1532,17 @@ Eine permanente inhaltliche Kontrolle der verlinkten Seiten ist jedoch ohne konk
       
       incProgress(0.2, detail="Translating proteins")
       if (cancel_requested()) {showNotification("Analysis cancelled.", type="warning"); shinyjs::disable("cancel"); result_data(NULL); return(NULL)}
-      df <- df %>% dplyr::mutate(Mutated_Protein=sapply(Mutated_Sequence, translate_prot), Protein_Length_aa=nchar(Mutated_Protein))
+      prot <- tryCatch(
+        mapply(translate_prot_strict, df$Mutated_Sequence, df$DNA_variant, USE.NAMES = FALSE),
+        error = function(e) e
+      )
+      if (inherits(prot, "error")) {
+        showModal(modalDialog(title="Protein translation failed", prot$message, easyClose=TRUE, footer=modalButton("OK")))
+        result_data(NULL); shinyjs::disable("cancel"); shinyjs::enable("run"); return(NULL)
+      }
+      df$Mutated_Protein <- prot
+      df$Protein_Length_aa <- nchar(df$Mutated_Protein)
+      
       
       incProgress(0.2, detail="Refining mutation types")
       if (cancel_requested()) {showNotification("Analysis cancelled.", type="warning"); shinyjs::disable("cancel"); result_data(NULL); return(NULL)}
@@ -1403,6 +1756,39 @@ Eine permanente inhaltliche Kontrolle der verlinkten Seiten ist jedoch ohne konk
   })
   
   
+  output$csv_status <- renderUI({
+    msg <- csv_msg()
+    if (is.null(msg) || msg == "") return(NULL)
+    ok <- isTRUE(csv_ok())
+    tags$div(
+      class = if (ok) "text-success" else "text-warning",
+      style = "font-size:0.88em; margin-top:6px;",
+      msg
+    )
+  })
+  
+  output$fasta_status <- renderUI({
+    msg <- fasta_msg()
+    if (is.null(msg) || msg == "") return(NULL)
+    ok <- isTRUE(fasta_ok())
+    tags$div(
+      class = if (ok) "text-success" else "text-warning",
+      style = "font-size:0.88em; margin-top:6px;",
+      msg
+    )
+  })
+  
+  output$fasta_flank_status <- renderUI({
+    req(input$use_titer)
+    msg <- flank_msg()
+    if (is.null(msg) || msg == "") return(NULL)
+    ok <- isTRUE(flank_ok())
+    tags$div(
+      class = if (ok) "text-success" else "text-warning",
+      style = "font-size:0.88em; margin-top:6px;",
+      msg
+    )
+  })
   
   output$csv_ui <- renderUI({
     if (is.null(example_csv())) {
