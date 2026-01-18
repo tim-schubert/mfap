@@ -213,17 +213,32 @@ ui <- tagList(
       }
       
       #shiny-modal.mfap-intro-modal{
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
+        display: block !important;
+      }
+      
+      @media (min-height: 700px){
+        #shiny-modal.mfap-intro-modal{
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+        }
+      
+        #shiny-modal.mfap-intro-modal .modal-dialog{
+          margin: 0 !important;
+        }
       }
       
       #shiny-modal.mfap-intro-modal .modal-dialog{
-        margin: 0 !important;
         max-width: 760px;
         width: calc(100% - 2rem);
+        margin: 1rem auto !important; /* top/bottom breathing room when not centered */
       }
-
+      
+      #shiny-modal.mfap-intro-modal .modal-content{
+        max-height: calc(100vh - 2rem);
+        overflow: auto;
+        -webkit-overflow-scrolling: touch;
+      }
 
       
       .mfap-brand{
