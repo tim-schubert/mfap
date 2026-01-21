@@ -630,7 +630,7 @@ button.intro-cta:active{
                   
                   tags$div(
                     class = "muted",
-                    tags$span("If using TITER, please additionally cite Zhang et al. (2017)"),
+                    tags$span("If using TITER, please additionally cite: Zhang et al. (2017)"),
                     "·",
                     actionLink("show_titer_bibtex", label = "BibTeX", class = "bib-link")
                   )
@@ -1082,7 +1082,7 @@ server <- function(input, output, session) {
         
         tags$p(
           mfap()," helps you quantify protein-level consequences of cDNA variants in single-exon (i.e., intronless) genes.",
-          mfap()," is built to support genotype–phenotype correlation studies. To use ",mfap(),", you will upload a table, where each row represents one individual (or sample), and columns capture variants in HGVS annotation. You may also include columns for phenotype or severity measures but ", mfap()," does not require those."
+          mfap()," is built to support genotype–phenotype correlation studies. To use ",mfap(),", you will upload a table, where each row represents one individual (or sample), and columns capture variants in HGVS annotation. In addition, please upload the reference sequence for your gene of interest. You may also include columns for phenotype or severity measures but ", mfap()," does not require those."
         ),
         
         tags$div(
