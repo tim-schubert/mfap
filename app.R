@@ -155,31 +155,31 @@ mfap <- function(){
 
 
 ui <- tagList(
-    bslib::page_navbar(
-      fillable = FALSE,
-      useShinyjs(),
-      id = "topnav",
-      title = tags$div(
-        
-    class = "brand",
-    style = "display:flex;flex-direction:column;line-height:1.05;align-items:flex-start;padding-right:32px;",
-    tags$span(
-      class = "brand-title",
-      tags$span("M"),
-      tags$span(class="mfap-f","f"),
-      tags$span("AP")
+  bslib::page_navbar(
+    fillable = FALSE,
+    useShinyjs(),
+    id = "topnav",
+    title = tags$div(
+      
+      class = "brand",
+      style = "display:flex;flex-direction:column;line-height:1.05;align-items:flex-start;padding-right:32px;",
+      tags$span(
+        class = "brand-title",
+        tags$span("M"),
+        tags$span(class="mfap-f","f"),
+        tags$span("AP")
+      ),
+      
+      tags$span(class="brand-subtitle","Molecular feature Association Pipeline")
     ),
-    
-    tags$span(class="brand-subtitle","Molecular feature Association Pipeline")
-  ),
-  theme = bslib::bs_theme(version = 5, bootswatch = "darkly"),
-  window_title = "MfAP — Molecular feature Association Pipeline",
-  header = tags$head(
-    tags$link(
-      rel = "stylesheet",
-      href = "https://fonts.googleapis.com/css2?family=Libre+Bodoni:ital,wght@0,700;0,800;1,700;1,800&display=swap"
-    ),
-    tags$script(HTML("
+    theme = bslib::bs_theme(version = 5, bootswatch = "darkly"),
+    window_title = "MfAP — Molecular feature Association Pipeline",
+    header = tags$head(
+      tags$link(
+        rel = "stylesheet",
+        href = "https://fonts.googleapis.com/css2?family=Libre+Bodoni:ital,wght@0,700;0,800;1,700;1,800&display=swap"
+      ),
+      tags$script(HTML("
       Shiny.addCustomMessageHandler('mfap_intro_modal_class', function(msg){
         var m = document.getElementById('shiny-modal');
         if (!m) return;
@@ -198,10 +198,10 @@ ui <- tagList(
 
     ")),
       
-    
-    
-    
-    tags$style(HTML("
+      
+      
+      
+      tags$style(HTML("
     
       .page-container{max-width:1180px;margin:0 auto;padding:0 14px;}
       .navbar .container-fluid{max-width:1180px;margin:0 auto;padding:0 14px;}
@@ -464,7 +464,7 @@ button.intro-cta:active{
         .site-footer__center{ font-size:0.88rem; }
       }
     ")),
-    tags$script(HTML("
+      tags$script(HTML("
   Shiny.addCustomMessageHandler('mfap_intro_once', function(msg){
     const key = (msg && msg.key) ? msg.key : 'mfap_intro_dismissed_v1';
     let dismissed = false;
@@ -480,8 +480,8 @@ button.intro-cta:active{
     try { sessionStorage.setItem(key, '1'); } catch(e) {}
   });
 ")),
-    
-    tags$script(HTML("
+      
+      tags$script(HTML("
       document.addEventListener('click', function(e){
         const btn = e.target.closest('[data-copy-target]');
         if (!btn) return;
@@ -495,238 +495,238 @@ button.intro-cta:active{
         });
       });
     "))
-  ),
-
-  # ————— Analyze
-  bslib::nav_panel(
-    "Analysis",
-    div(class="page-container",
-        sidebarLayout(
-          sidebarPanel(
-            width = 3, class="sidebar",
-            style = "max-height: calc(100vh - 220px); overflow-y: auto; overflow-x: hidden;",
-            bslib::card(
-              bslib::card_header("Upload"),
-              bslib::card_body(
-                uiOutput("csv_ui"),
-                uiOutput("csv_status"),
-                
-                tags$details(
-                  tags$summary("File requirements ▿"),
-                  tags$div(class="muted", style="font-size:0.9em;",
-                           HTML(paste(
-                             "<b>Your table needs at least two columns with these names:</b>",
-                             "<ul>",
-                             "<li>'DNA_variant' in HGVS-annotation, e.g. 'c.123delA'",
-                             "<li>'patient_ID' as the individual identifier</li>",
-                             "</ul>", sep = ""
-                           )))
-                ),
-                div(style="height:8px;"),
-                
-                uiOutput("fasta_ui"),
-                uiOutput("fasta_status"),
-                tags$details(
-                  tags$summary("Obtaining a FASTA ▿"),
-                  tags$div(class="muted", style="font-size:0.9em;",
-                           HTML(paste(
-                             "Example workflow:",
-                             "<ul style='margin-bottom:0;'>",
-                             "<li>Find the gene on <i>ensembl.org</i></li>",
-                             "<li>Click <b>Download sequence</b></li>",
-                             "<li>Included sequences: select <b>all</b></li>",
-                             "<li>Format: <b>FASTA</b></li>",
-                             "<li>Flanks: set to <b>0</b></li>",
-                             "<li>Click <b>Download</b></li>",
-                             "</ul>", sep = ""
-                           )))
-                ),
-                div(style="height:8px;"),
-                checkboxInput("use_titer", "Include alternative translation initiation site prediction (TITER, developed by Zhang et al. 2017)", FALSE),
-                conditionalPanel(
-                  condition = "input.use_titer == true",
-                  uiOutput("fasta_flank_ui"),
-                  uiOutput("fasta_flank_status"),
+    ),
+    
+    # ————— Analyze
+    bslib::nav_panel(
+      "Analysis",
+      div(class="page-container",
+          sidebarLayout(
+            sidebarPanel(
+              width = 3, class="sidebar",
+              style = "max-height: calc(100vh - 220px); overflow-y: auto; overflow-x: hidden;",
+              bslib::card(
+                bslib::card_header("Upload"),
+                bslib::card_body(
+                  uiOutput("csv_ui"),
+                  uiOutput("csv_status"),
+                  
                   tags$details(
-                    tags$summary("Obtaining a FASTA with flanks ▿"),
+                    tags$summary("File requirements ▿"),
                     tags$div(class="muted", style="font-size:0.9em;",
-                             HTML("Follow the same workflow as for the normal FASTA file. Simply set Flanks to 100 instead of 0."))
+                             HTML(paste(
+                               "<b>Your table needs at least two columns with these names:</b>",
+                               "<ul>",
+                               "<li>'DNA_variant' in HGVS-annotation, e.g. 'c.123delA'",
+                               "<li>'patient_ID' as the individual identifier</li>",
+                               "</ul>", sep = ""
+                             )))
                   ),
+                  div(style="height:8px;"),
+                  
+                  uiOutput("fasta_ui"),
+                  uiOutput("fasta_status"),
                   tags$details(
-                    tags$summary("Why do you need other FASTA files with flanks for TITER? ▿"),
+                    tags$summary("Obtaining a FASTA ▿"),
                     tags$div(class="muted", style="font-size:0.9em;",
-                             HTML("TITER evaluates sequence context within a 203 bp window around the central bases. To evaluate potential start sites close to the 5' end, we need a CDS file with ±100 bp flanks (part of 5' and 3' UTR)."))
+                             HTML(paste(
+                               "Example workflow:",
+                               "<ul style='margin-bottom:0;'>",
+                               "<li>Find the gene on <i>ensembl.org</i></li>",
+                               "<li>Click <b>Download sequence</b></li>",
+                               "<li>Included sequences: select <b>all</b></li>",
+                               "<li>Format: <b>FASTA</b></li>",
+                               "<li>Flanks: set to <b>0</b></li>",
+                               "<li>Click <b>Download</b></li>",
+                               "</ul>", sep = ""
+                             )))
+                  ),
+                  div(style="height:8px;"),
+                  checkboxInput("use_titer", "Include alternative translation initiation site prediction (TITER, developed by Zhang et al. 2017)", FALSE),
+                  conditionalPanel(
+                    condition = "input.use_titer == true",
+                    uiOutput("fasta_flank_ui"),
+                    uiOutput("fasta_flank_status"),
+                    tags$details(
+                      tags$summary("Obtaining a FASTA with flanks ▿"),
+                      tags$div(class="muted", style="font-size:0.9em;",
+                               HTML("Follow the same workflow as for the normal FASTA file. Simply set Flanks to 100 instead of 0."))
+                    ),
+                    tags$details(
+                      tags$summary("Why do you need other FASTA files with flanks for TITER? ▿"),
+                      tags$div(class="muted", style="font-size:0.9em;",
+                               HTML("TITER evaluates sequence context within a 203 bp window around the central bases. To evaluate potential start sites close to the 5' end, we need a CDS file with ±100 bp flanks (part of 5' and 3' UTR)."))
+                    )
+                  ),
+                  div(style="height:8px;"),
+                  actionButton("clear_uploads", "Clear uploads", class="btn btn-secondary")
+                )
+              ),
+              bslib::card(
+                bslib::card_header("Domains"),
+                bslib::card_body(
+                  fluidRow(
+                    column(4, textInput("dom_name","Name")),
+                    column(4, numericInput("dom_start","Start AA", 1, min = 1)),
+                    column(4, numericInput("dom_end","End AA", 1, min = 1))
+                  ),
+                  fluidRow(
+                    column(6, actionButton("add_dom","Add", class="btn btn-info")),
+                    column(6, actionButton("clr_dom","Clear", class="btn btn-secondary"))
+                  ),
+                  tableOutput("dom_tbl") %>% tagAppendAttributes(style="font-size:0.9em; margin-top:8px;")
+                )
+              ),
+              
+              bslib::card(
+                bslib::card_header("Motifs"),
+                bslib::card_body(
+                  fluidRow(column(6, textInput("mot_name","Name")),
+                           column(6, textInput("mot_pattern","AA sequence"))),
+                  fluidRow(column(6, actionButton("add_mot","Add", class="btn btn-info")),
+                           column(6, actionButton("clr_mot","Clear", class="btn btn-secondary"))),
+                  tableOutput("mot_tbl") %>% tagAppendAttributes(style="font-size:0.9em; margin-top:8px;")
+                )
+              ),
+              bslib::card(
+                bslib::card_header("Demo"),
+                bslib::card_body(
+                  tags$p(class="muted", style="font-size:0.9em;",
+                         "Load a fictional cohort with example variants, reference sequences, and example domains/motifs."),
+                  fluidRow(
+                    column(6, actionButton("load_example_data", "Load demo", class="btn btn-dark")),
+                    column(6, actionButton("clear_example_data", "Clear demo", class="btn btn-secondary"))
                   )
-                ),
-                div(style="height:8px;"),
-                actionButton("clear_uploads", "Clear uploads", class="btn btn-secondary")
-              )
-            ),
-            bslib::card(
-              bslib::card_header("Domains"),
-              bslib::card_body(
-                fluidRow(
-                  column(4, textInput("dom_name","Name")),
-                  column(4, numericInput("dom_start","Start AA", 1, min = 1)),
-                  column(4, numericInput("dom_end","End AA", 1, min = 1))
-                ),
-                fluidRow(
-                  column(6, actionButton("add_dom","Add", class="btn btn-info")),
-                  column(6, actionButton("clr_dom","Clear", class="btn btn-secondary"))
-                ),
-                tableOutput("dom_tbl") %>% tagAppendAttributes(style="font-size:0.9em; margin-top:8px;")
-              )
-            ),
-            
-            bslib::card(
-              bslib::card_header("Motifs"),
-              bslib::card_body(
-                fluidRow(column(6, textInput("mot_name","Name")),
-                         column(6, textInput("mot_pattern","AA sequence"))),
-                fluidRow(column(6, actionButton("add_mot","Add", class="btn btn-info")),
-                         column(6, actionButton("clr_mot","Clear", class="btn btn-secondary"))),
-                tableOutput("mot_tbl") %>% tagAppendAttributes(style="font-size:0.9em; margin-top:8px;")
-              )
-            ),
-            bslib::card(
-              bslib::card_header("Demo"),
-              bslib::card_body(
-                tags$p(class="muted", style="font-size:0.9em;",
-                       "Load a fictional cohort with example variants, reference sequences, and example domains/motifs."),
-                fluidRow(
-                  column(6, actionButton("load_example_data", "Load demo", class="btn btn-dark")),
-                  column(6, actionButton("clear_example_data", "Clear demo", class="btn btn-secondary"))
                 )
+              ),
+              div(class="action-dock",
+                  div(class="action-row",
+                      actionButton("run", "Analyze", icon=icon("play"), class="btn btn-success"),
+                      actionButton("cancel", "Cancel", class="btn btn-danger")
+                  )
               )
             ),
-            div(class="action-dock",
-                div(class="action-row",
-                    actionButton("run", "Analyze", icon=icon("play"), class="btn btn-success"),
-                    actionButton("cancel", "Cancel", class="btn btn-danger")
+            mainPanel(
+              width = 9,
+              style = "max-height: calc(100vh - 220px); overflow-y: auto; overflow-x: hidden;",
+              bslib::card(
+                bslib::card_header("Important notes"),
+                bslib::card_body(
+                  tags$p(
+                    class = "muted",
+                    style = "font-size:0.98rem; line-height:1.4; margin-bottom:10px;",
+                    "This application is provided for research and educational purposes only. ",
+                    "It is not intended for clinical use, medical decision-making, diagnosis, or patient management. ",
+                    "No warranty is given as to the correctness, completeness, or suitability of the results. ",
+                    "The authors and operators assume no liability for any use of the information generated by this application. ",
+                    "Users are solely responsible for compliance with applicable data-protection, privacy, and ethical regulations."
+                  ),
+                  
+                  tags$div(
+                    class = "muted",
+                    tags$span("Please cite: Schubert et al. (2025) ·"),
+                    actionLink("show_bib", label = "BibTeX", class = "bib-link")
+                  ),
+                  
+                  tags$div(
+                    class = "muted",
+                    tags$span("If using TITER, please additionally cite Zhang et al. (2017)"),
+                    "·",
+                    actionLink("show_titer_bibtex", label = "BibTeX", class = "bib-link")
+                  )
                 )
+              ),
+              
+              bslib::card(
+                bslib::card_header(uiOutput("results_header")),
+                bslib::card_body(uiOutput("results_body"))
+              )
+              
+              
             )
-          ),
-          mainPanel(
-            width = 9,
-            style = "max-height: calc(100vh - 220px); overflow-y: auto; overflow-x: hidden;",
-            bslib::card(
-              bslib::card_header("Important notes"),
-              bslib::card_body(
-                tags$p(
-                  class = "muted",
-                  style = "font-size:0.98rem; line-height:1.4; margin-bottom:10px;",
-                  "This application is provided for research and educational purposes only. ",
-                  "It is not intended for clinical use, medical decision-making, diagnosis, or patient management. ",
-                  "No warranty is given as to the correctness, completeness, or suitability of the results. ",
-                  "The authors and operators assume no liability for any use of the information generated by this application. ",
-                  "Users are solely responsible for compliance with applicable data-protection, privacy, and ethical regulations."
-                ),
-                
-                tags$div(
-                  class = "muted",
-                  tags$span(strong("Please cite:"), "Schubert et al. (2025) ·"),
-                  actionLink("show_bib", label = "BibTeX", class = "bib-link")
-                ),
-                
-                tags$div(
-                  class = "muted",
-                  tags$span("If using TITER, please additionally cite Zhang et al. (2017)"),
-                  "·",
-                  actionLink("show_titer_bibtex", label = "BibTeX", class = "bib-link")
-                )
-              )
-            ),
-            
-            bslib::card(
-              bslib::card_header(uiOutput("results_header")),
-              bslib::card_body(uiOutput("results_body"))
-            )
-            
-            
           )
-        )
-    )
-  ),
-  
-  # ————— Background
-  bslib::nav_panel(
-    "Background",
-    div(class="page-container",
-        fluidRow(
-          column(12,
-                 bslib::card(
-                   bslib::card_header("Overview"),
-                   bslib::card_body(
-                     p(mfap()," is a framework developed by Tim Schubert and colleagues at the Institute of Human Genetics of Heidelberg University (Germany), which allows users to calculate and predict DNA and protein level consequences of genetic variation in single-exon genes. ",mfap()," requires minimal user input: a list of variants in HGVS cDNA notation and the reference DNA sequence of the gene of interest.")
-                   )
-                 ),
-                 bslib::card(
-                   bslib::card_header("Rationale"),
-                   bslib::card_body(
-                     p("Protein-truncating variants (PTVs) canonically lead to nonsense-mediated mRNA decay. This process necessitates an exon-exon junction, which is lacking in single-exon genes. Therefore, PTVs in single-exon genes can result in a truncated protein that may have dominant-negative, gain-of-function, or neomorphic effects. In our accompanying manuscript, we demonstrate that ",mfap(),"-predicted protein-level attributes of such truncated proteins provide a stronger causal link between genotype and phenotypic severity."),
-                     tags$figure(
-                       tags$img(
-                         src = "https://lh3.googleusercontent.com/d/1gDNYo7HuDE4md9mvPLc4yiQXgOnl29Ly",
-                         alt = "Rationale",
-                         style = "display:block;margin:10px auto;max-width:60%;height:auto;border-radius:10px;border:1px solid rgba(255,255,255,.08);",
-                         loading = "lazy"
+      )
+    ),
+    
+    # ————— Background
+    bslib::nav_panel(
+      "Background",
+      div(class="page-container",
+          fluidRow(
+            column(12,
+                   bslib::card(
+                     bslib::card_header("Overview"),
+                     bslib::card_body(
+                       p(mfap()," is a framework developed by Tim Schubert and colleagues at the Institute of Human Genetics of Heidelberg University (Germany), which allows users to calculate and predict DNA and protein level consequences of genetic variation in single-exon genes. ",mfap()," requires minimal user input: a list of variants in HGVS cDNA notation and the reference DNA sequence of the gene of interest.")
+                     )
+                   ),
+                   bslib::card(
+                     bslib::card_header("Rationale"),
+                     bslib::card_body(
+                       p("Protein-truncating variants (PTVs) canonically lead to nonsense-mediated mRNA decay. This process necessitates an exon-exon junction, which is lacking in single-exon genes. Therefore, PTVs in single-exon genes can result in a truncated protein that may have dominant-negative, gain-of-function, or neomorphic effects. In our accompanying manuscript, we demonstrate that ",mfap(),"-predicted protein-level attributes of such truncated proteins provide a stronger causal link between genotype and phenotypic severity."),
+                       tags$figure(
+                         tags$img(
+                           src = "https://lh3.googleusercontent.com/d/1gDNYo7HuDE4md9mvPLc4yiQXgOnl29Ly",
+                           alt = "Rationale",
+                           style = "display:block;margin:10px auto;max-width:60%;height:auto;border-radius:10px;border:1px solid rgba(255,255,255,.08);",
+                           loading = "lazy"
+                         ),
+                         tags$figcaption(
+                           "Figure: Evasion of nonsense-mediated decay hypothesis. Figure created with Biorender.com",
+                           style="text-align:center;color:#cfd4da;font-size:.9em;margin-top:6px;"
+                         )
+                       )
+                     )
+                   ),
+                   bslib::card(
+                     bslib::card_header("Workflow"),
+                     bslib::card_body(
+                       p("",mfap()," outputs calculations and predictions of the effects of variants on the DNA and protein level, including predictions of non-canonical translation initiation sites (TISs) and resulting proteins. For more information and inspiration for downstream analyses, please read the accompanying paper."),
+                       tags$figure(
+                         tags$img(
+                           src = "https://lh3.googleusercontent.com/d/1h-h2yfvsKnxscA3ko8VyeFXkPaa9iAkE",
+                           alt = "MfAP workflow schematic",
+                           style = "display:block;margin:10px auto;max-width:60%;height:auto;border-radius:10px;border:1px solid rgba(255,255,255,.08);",
+                           loading = "lazy"
+                         ),
+                         tags$figcaption(
+                           "Figure: ",mfap()," workflow. Figure created with Biorender.com",
+                           style="text-align:center;color:#cfd4da;font-size:.9em;margin-top:6px;"
+                         )
+                       )
+                     )
+                   ),
+                   bslib::card(
+                     bslib::card_header("Literature"),
+                     bslib::card_body(
+                       tags$p(
+                         style = "margin:0 0 8px 0;",
+                         HTML("Schubert T, Tietzel A, Pottayil H, Caro P, Gilmore RB, Franke F, Althammer F, Schaaf CP. 2025. "),
+                         em("A blueprint for protein-centric genotype-phenotype investigations in single-exon disease genes applied to MAGEL2 and Schaaf-Yang syndrome."),
+                         HTML(" <i>Journal</i> <b>VOLUME</b>(ISSUE):PAGES · "),
+                         tags$a(href="https://doi.org/10.xxxx/xxxxx", target="_blank", "doi:10.xxxx/xxxxx"),
+                         HTML(" · "),
+                         actionLink("bib_schubert_bg", "BibTeX", class = "bib-link")
                        ),
-                       tags$figcaption(
-                         "Figure: Evasion of nonsense-mediated decay hypothesis. Figure created with Biorender.com",
-                         style="text-align:center;color:#cfd4da;font-size:.9em;margin-top:6px;"
+                       tags$p(
+                         style = "margin:0;",
+                         HTML("Zhang S, Hu H, Jiang T, Zhang L, Zeng J. 2017. "),
+                         em("TITER: predicting translation initiation sites by deep learning."),
+                         HTML(" <i>Bioinformatics</i> <b>33</b>(14):i234–i242 · "),
+                         tags$a(href="https://doi.org/10.1093/bioinformatics/btx247", target="_blank", "doi:10.1093/bioinformatics/btx247"),
+                         HTML(" · "),
+                         actionLink("bib_titer_bg", "BibTeX", class = "bib-link")
                        )
                      )
                    )
-                 ),
-                 bslib::card(
-                   bslib::card_header("Workflow"),
-                   bslib::card_body(
-                     p("",mfap()," outputs calculations and predictions of the effects of variants on the DNA and protein level, including predictions of non-canonical translation initiation sites (TISs) and resulting proteins. For more information and inspiration for downstream analyses, please read the accompanying paper."),
-                     tags$figure(
-                       tags$img(
-                         src = "https://lh3.googleusercontent.com/d/1h-h2yfvsKnxscA3ko8VyeFXkPaa9iAkE",
-                         alt = "MfAP workflow schematic",
-                         style = "display:block;margin:10px auto;max-width:60%;height:auto;border-radius:10px;border:1px solid rgba(255,255,255,.08);",
-                         loading = "lazy"
-                       ),
-                       tags$figcaption(
-                         "Figure: ",mfap()," workflow. Figure created with Biorender.com",
-                         style="text-align:center;color:#cfd4da;font-size:.9em;margin-top:6px;"
-                       )
-                     )
-                   )
-                 ),
-                 bslib::card(
-                   bslib::card_header("Literature"),
-                   bslib::card_body(
-                     tags$p(
-                       style = "margin:0 0 8px 0;",
-                       HTML("Schubert T, Tietzel A, Pottayil H, Caro P, Gilmore RB, Franke F, Althammer F, Schaaf CP. 2025. "),
-                       em("A blueprint for protein-centric genotype-phenotype investigations in single-exon disease genes applied to MAGEL2 and Schaaf-Yang syndrome."),
-                       HTML(" <i>Journal</i> <b>VOLUME</b>(ISSUE):PAGES · "),
-                       tags$a(href="https://doi.org/10.xxxx/xxxxx", target="_blank", "doi:10.xxxx/xxxxx"),
-                       HTML(" · "),
-                       actionLink("bib_schubert_bg", "BibTeX", class = "bib-link")
-                     ),
-                     tags$p(
-                       style = "margin:0;",
-                       HTML("Zhang S, Hu H, Jiang T, Zhang L, Zeng J. 2017. "),
-                       em("TITER: predicting translation initiation sites by deep learning."),
-                       HTML(" <i>Bioinformatics</i> <b>33</b>(14):i234–i242 · "),
-                       tags$a(href="https://doi.org/10.1093/bioinformatics/btx247", target="_blank", "doi:10.1093/bioinformatics/btx247"),
-                       HTML(" · "),
-                       actionLink("bib_titer_bg", "BibTeX", class = "bib-link")
-                     )
-                   )
-                 )
+            )
           )
-        )
+      )
+    ),  # end nav_panel Background
+    bslib::nav_item(
+      actionLink("open_intro", "Introduction", class = "nav-link")
     )
-  ),  # end nav_panel Background
-  bslib::nav_item(
-    actionLink("open_intro", "Introduction", class = "nav-link")
-  )
-    )  # <-- THIS closes page_navbar()
+  )  # <-- THIS closes page_navbar()
   
   ,  # <-- comma separating the two children of tagList()
   
@@ -1082,7 +1082,7 @@ server <- function(input, output, session) {
         
         tags$p(
           mfap()," helps you quantify protein-level consequences of cDNA variants in single-exon (i.e., intronless) genes.",
-          mfap()," is built to support genotype–phenotype correlation studies. To use ",mfap(),", you will upload a table where each row represents one individual (or sample), and columns capture variants in HGVS annotation. You may also include columns for phenotype or severity measures but ", mfap()" does not require those."
+          mfap()," is built to support genotype–phenotype correlation studies. To use ",mfap(),", you will upload a table, where each row represents one individual (or sample), and columns capture variants in HGVS annotation. You may also include columns for phenotype or severity measures but ", mfap()," does not require those."
         ),
         
         tags$div(
@@ -1172,7 +1172,7 @@ server <- function(input, output, session) {
   }, ignoreInit = TRUE)
   
   
- 
+  
   observeEvent(input$clear_uploads, {
     shinyjs::reset("csv"); shinyjs::reset("fasta"); shinyjs::reset("fasta_flank")
     example_csv(NULL); example_fasta_seq(NULL); example_fasta_flank_seq(NULL)
@@ -1471,7 +1471,7 @@ server <- function(input, output, session) {
         
         tags$h5("Verbraucherstreitbeilegung / Universalschlichtungsstelle"),
         tags$p(class="muted",
-          "Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen."
+               "Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen."
         ),
         
         tags$h5("Haftung für Inhalte"),
@@ -1514,8 +1514,8 @@ Eine permanente inhaltliche Kontrolle der verlinkten Seiten ist jedoch ohne konk
                "No results to be displayed, yet."),
         tags$p(style="margin:0;",
                "Insert data on the left and click “Analyze”. Your results will appear here.")
-      
-      
+        
+        
       )
     } else {
       DTOutput("res_tbl")
