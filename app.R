@@ -1082,7 +1082,7 @@ server <- function(input, output, session) {
         
         tags$p(
           mfap()," helps you quantify protein-level consequences of cDNA variants in single-exon (i.e., intronless) genes.",
-          mfap()," is built to support genotype–phenotype correlation studies. To use ",mfap(),", you will upload a table, where each row represents one individual (or sample), and columns capture variants in HGVS annotation. In addition, please upload the reference sequence for your gene of interest. You may also include columns for phenotype or severity measures but ", mfap()," does not require those."
+          mfap()," is built to support genotype–phenotype correlation studies. To use ",mfap(),", you will upload a table, where each row represents one individual (or sample), and columns contain variables such as a patient ID and the DNA variants in HGVS annotation. In addition, please upload the reference sequence for your gene of interest (e.g., from Ensembl). You may also include columns for phenotype or severity measures but ", mfap()," does not require those."
         ),
         
         tags$div(
