@@ -532,7 +532,7 @@ button.intro-cta:active{
                            HTML(paste(
                              "Example workflow:",
                              "<ul style='margin-bottom:0;'>",
-                             "<li>Find your gene on <i>ensembl.org</i></li>",
+                             "<li>Find the gene on <i>ensembl.org</i></li>",
                              "<li>Click <b>Download sequence</b></li>",
                              "<li>Included sequences: select <b>all</b></li>",
                              "<li>Format: <b>FASTA</b></li>",
@@ -1081,11 +1081,8 @@ server <- function(input, output, session) {
                style = "font-size:1.35rem; margin-bottom:10px;"),
         
         tags$p(
-          mfap()," helps you quantify protein-level consequences of cDNA variants in single-exon (i.e., intronless) genes."
-        ),
-        
-        tags$p(
-          mfap()," is built to support genotype–phenotype correlation studies. Upload a table (.csv format) where each row corresponds to an individual (or sample), and columns capture variants in HGVS annotation plus any phenotype or severity measures."
+          mfap()," helps you quantify protein-level consequences of cDNA variants in single-exon (i.e., intronless) genes.",
+          mfap()," is built to support genotype–phenotype correlation studies. To use ",mfap(),", you will upload a table where each row represents one individual (or sample), and columns capture variants in HGVS annotation. You may also include columns for phenotype or severity measures but ", mfap()" does not require those."
         ),
         
         tags$div(
@@ -1146,10 +1143,8 @@ server <- function(input, output, session) {
         
         tags$p(
           tags$b("Imprinted genes: "),
-          "If your gene is imprinted, only include variants on the expressed allele, i.e. the allele that is transcriptionally active in the relevant biological context."
-        ),
-        tags$p(class = "muted", "Tip: use “Load demo cohort” to test out ",mfap(),"!")
-      )
+          "If your gene of interest is imprinted, only include variants on the expressed allele, i.e. the allele that is transcriptionally active in the relevant biological context."
+        )      )
     ))
     session$sendCustomMessage("mfap_intro_modal_class", list(on = TRUE))
     
