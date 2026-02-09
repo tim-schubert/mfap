@@ -9,6 +9,7 @@ library(bslib)
 # ———————————————— PYTHON VENV SETUP ————————————————
 venv_name   <- "r-reticulate"
 venv_path   <- file.path("~", ".virtualenvs", venv_name)
+# On macOS, python3 may be /opt/homebrew/bin/python3 or /usr/local/bin/python3 if /usr/bin/python3 is missing
 system_python <- "/usr/bin/python3"
 if (!dir.exists(venv_path)) {
   message("Creating Python venv at ", venv_path)
@@ -37,6 +38,9 @@ parse_mutation <- function(mutation, wildtype_seq) {
     Duplicated_Bases=NA_character_, Inserted_Bases=NA_character_,
     Mutated_Sequence=NA_character_
   )
+  if (is.na(mutation) || !nzchar(trimws(mutation))) return(info)
+  if (is.na(wildtype_seq) || !nzchar(wildtype_seq)) return(info)
+  mutation <- trimws(mutation)
   if (str_starts(mutation, "c.")) mutation <- substring(mutation, 3)
   if (str_detect(mutation, ">")) {
     parts <- str_split(mutation, ">")[[1]]
@@ -138,6 +142,7 @@ refine_point <- function(locus, seq, wt_seq, codon_tbl) {
 }
 refine_indel <- function(mt, del, dup, ins) {
   net <- switch(mt, Deletion=-nchar(del), Duplication=nchar(dup), Insertion=nchar(ins), Indel=nchar(ins)-nchar(del), 0)
+  if (length(net) != 1 || is.na(net)) return("Frameshifting indel")
   if (net %% 3 == 0) "In-Frame indel" else "Frameshifting indel"
 }
 
@@ -358,6 +363,24 @@ ui <- tagList(
       details>summary{cursor:pointer;font-weight:600;color:#e9ecef;list-style:none;}
       details>summary::-webkit-details-marker{display:none;}
       details[open]{background:#2d3236;}
+      .upload-card-body{padding-top:0.35rem;padding-bottom:0.35rem;}
+      .upload-card-body > *{margin:0;margin-top:0.08rem;}
+      .upload-card-body > *:first-child{margin-top:0;}
+      .upload-card-body .form-group,.upload-card-body .shiny-input-container{margin-bottom:0 !important;}
+      .upload-fields{display:flex;flex-direction:column;gap:0.05rem;}
+      .upload-fields .form-group,.upload-fields .shiny-input-container{margin-bottom:0 !important;}
+      .help-trigger{font-size:0.82rem;color:#6c757d;text-decoration:none;display:inline-flex;align-items:center;gap:6px;}
+      .help-trigger:hover{color:#adb5bd;text-decoration:none;}
+      .help-trigger-icon{opacity:0.85;font-size:0.95em;}
+      .disclaimer-bar{background:rgba(255,255,255,0.03);border-left:3px solid rgba(255,255,255,0.1);
+        border-radius:6px;padding:10px 14px;margin-bottom:16px;font-size:0.88rem;
+        display:flex;flex-wrap:wrap;align-items:center;gap:6px;}
+      .disclaimer-one-line{margin:0;color:#868e96;}
+      .disclaimer-link{color:#6c757d;text-decoration:none;}
+      .disclaimer-link:hover{color:#adb5bd;text-decoration:underline;}
+      .disclaimer-sep{color:#495057;}
+      .disclaimer-cite{color:#868e96;}
+      .disclaimer-bib{margin-left:2px;}
       .muted{color:#adb5bd;}
       .download-row{display:flex;justify-content:flex-end;margin:0;}
 
@@ -506,59 +529,28 @@ button.intro-cta:active{
               width = 3, class="sidebar",
               style = "max-height: calc(100vh - 220px); overflow-y: auto; overflow-x: hidden;",
               bslib::card(
+                class = "upload-card",
                 bslib::card_header("Upload"),
                 bslib::card_body(
-                  uiOutput("csv_ui"),
-                  uiOutput("csv_status"),
-                  
-                  tags$details(
-                    tags$summary("File requirements ▿"),
-                    tags$div(class="muted", style="font-size:0.9em;",
-                             HTML(paste(
-                               "<b>Your table needs at least two columns with these names:</b>",
-                               "<ul>",
-                               "<li>'DNA_variant' in HGVS-annotation, e.g. 'c.123delA'",
-                               "<li>'patient_ID' as the individual identifier</li>",
-                               "</ul>", sep = ""
-                             )))
+                  class = "upload-card-body",
+                  tags$div(class = "help-trigger-wrap",
+                    actionLink("upload_help_trigger",
+                      tagList(icon("info-circle", class = "help-trigger-icon"), tags$span("Table format and FASTA download")),
+                      class = "help-trigger")
                   ),
-                  div(style="height:8px;"),
-                  
-                  uiOutput("fasta_ui"),
-                  uiOutput("fasta_status"),
-                  tags$details(
-                    tags$summary("Obtaining a FASTA ▿"),
-                    tags$div(class="muted", style="font-size:0.9em;",
-                             HTML(paste(
-                               "Example workflow:",
-                               "<ul style='margin-bottom:0;'>",
-                               "<li>Find the gene on <i>ensembl.org</i></li>",
-                               "<li>Click <b>Download sequence</b></li>",
-                               "<li>Included sequences: select <b>all</b></li>",
-                               "<li>Format: <b>FASTA</b></li>",
-                               "<li>Flanks: set to <b>0</b></li>",
-                               "<li>Click <b>Download</b></li>",
-                               "</ul>", sep = ""
-                             )))
+                  tags$div(class = "upload-fields",
+                    uiOutput("csv_ui"),
+                    uiOutput("csv_status"),
+                    uiOutput("fasta_ui"),
+                    uiOutput("fasta_status")
                   ),
-                  div(style="height:8px;"),
                   checkboxInput("use_titer", "Include alternative translation initiation site prediction (TITER, developed by Zhang et al. 2017)", FALSE),
                   conditionalPanel(
                     condition = "input.use_titer == true",
                     uiOutput("fasta_flank_ui"),
-                    uiOutput("fasta_flank_status"),
-                    tags$details(
-                      tags$summary("Obtaining a FASTA with flanks ▿"),
-                      tags$div(class="muted", style="font-size:0.9em;",
-                               HTML("Follow the same workflow as for the normal FASTA file. Simply set Flanks to 100 instead of 0."))
-                    ),
-                    tags$details(
-                      tags$summary("Why do you need other FASTA files with flanks for TITER? ▿"),
-                      tags$div(class="muted", style="font-size:0.9em;",
-                               HTML("TITER evaluates sequence context within a 203 bp window around the central bases. To evaluate potential start sites close to the 5' end, we need a CDS file with ±100 bp flanks (part of 5' and 3' UTR)."))
-                    )
+                    uiOutput("fasta_flank_status")
                   ),
-                  div(style="height:8px;"),
+                  div(style="height:2px;"),
                   actionButton("clear_uploads", "Clear uploads", class="btn btn-secondary")
                 )
               ),
@@ -574,7 +566,7 @@ button.intro-cta:active{
                     column(6, actionButton("add_dom","Add", class="btn btn-info")),
                     column(6, actionButton("clr_dom","Clear", class="btn btn-secondary"))
                   ),
-                  tableOutput("dom_tbl") %>% tagAppendAttributes(style="font-size:0.9em; margin-top:8px;")
+                  uiOutput("dom_tbl_wrapper")
                 )
               ),
               
@@ -585,7 +577,7 @@ button.intro-cta:active{
                            column(6, textInput("mot_pattern","AA sequence"))),
                   fluidRow(column(6, actionButton("add_mot","Add", class="btn btn-info")),
                            column(6, actionButton("clr_mot","Clear", class="btn btn-secondary"))),
-                  tableOutput("mot_tbl") %>% tagAppendAttributes(style="font-size:0.9em; margin-top:8px;")
+                  uiOutput("mot_tbl_wrapper")
                 )
               ),
               bslib::card(
@@ -621,17 +613,15 @@ button.intro-cta:active{
                     "The authors and operators assume no liability for any use of the information generated by this application. ",
                     "Users are solely responsible for compliance with applicable data-protection, privacy, and ethical regulations."
                   ),
-                  
                   tags$div(
                     class = "muted",
                     tags$span("Please cite: Schubert et al. (2025) ·"),
                     actionLink("show_bib", label = "BibTeX", class = "bib-link")
                   ),
-                  
                   tags$div(
                     class = "muted",
                     tags$span("If using TITER, please additionally cite: Zhang et al. (2017)"),
-                    "·",
+                    " · ",
                     actionLink("show_titer_bibtex", label = "BibTeX", class = "bib-link")
                   )
                 )
@@ -747,7 +737,7 @@ button.intro-cta:active{
           class = "footer-links",
           style = "margin:0;",
           
-          tags$span(class = "footer-item", HTML("&copy; 2025 Tim Schubert")),
+          tags$span(class = "footer-item", HTML("&copy; 2026 "), tags$a(href = "https://tim-schubert.github.io", target = "_blank", rel = "noopener noreferrer", class = "footer-link", "Tim Schubert")),
           
           tags$span(class = "footer-sep", HTML("&middot;")),
           
@@ -1185,13 +1175,25 @@ server <- function(input, output, session) {
   
   
   observeEvent(input$load_example_data, {
-    example_csv(read.csv("www/example_variants.csv", stringsAsFactors=FALSE))
-    lines <- readLines("www/example_reference.fasta", warn=FALSE)
-    example_fasta_seq(toupper(paste(lines[!startsWith(lines, ">")], collapse="")))
-    lines_flank <- readLines("www/example_reference_flank.fasta", warn=FALSE)
-    example_fasta_flank_seq(toupper(paste(lines_flank[!startsWith(lines_flank, ">")], collapse="")))
-    domains(example_domains); motifs(example_motifs)
-    showNotification("Example data loaded.", type="message")
+    err <- tryCatch({
+      if (!file.exists("www/example_variants.csv"))
+        stop("www/example_variants.csv not found. Run the app from the directory that contains app.R and www/.")
+      example_csv(read.csv("www/example_variants.csv", stringsAsFactors=FALSE))
+      if (!file.exists("www/example_reference.fasta"))
+        stop("www/example_reference.fasta not found.")
+      lines <- readLines("www/example_reference.fasta", warn=FALSE)
+      example_fasta_seq(toupper(paste(lines[!startsWith(lines, ">")], collapse="")))
+      if (!file.exists("www/example_reference_flank.fasta"))
+        stop("www/example_reference_flank.fasta not found.")
+      lines_flank <- readLines("www/example_reference_flank.fasta", warn=FALSE)
+      example_fasta_flank_seq(toupper(paste(lines_flank[!startsWith(lines_flank, ">")], collapse="")))
+      domains(example_domains); motifs(example_motifs)
+      showNotification("Example data loaded.", type="message")
+      NULL
+    }, error = function(e) e)
+    if (!is.null(err)) {
+      showNotification(paste0("Could not load demo: ", conditionMessage(err)), type = "error", duration = 10)
+    }
   })
   
   observeEvent(input$bib_schubert_bg, {
@@ -1286,7 +1288,12 @@ server <- function(input, output, session) {
   
   observeEvent(input$clr_dom, domains(data.frame(Name=character(),Start=integer(),End=numeric(),stringsAsFactors=FALSE)))
   output$dom_tbl <- renderTable(domains(), striped=TRUE, hover=TRUE)
-  
+  output$dom_tbl_wrapper <- renderUI({
+    if (nrow(domains()) > 0) {
+      tableOutput("dom_tbl") %>% tagAppendAttributes(style = "font-size:0.9em; margin-top:8px;")
+    } else NULL
+  })
+
   observeEvent(input$add_mot, {
     req(input$mot_name, input$mot_pattern)
     if (!str_detect(input$mot_pattern, "^[ACDEFGHIKLMNPQRSTVWYBZX]+$")) {showNotification("Pattern must use only IUPAC amino acid letters A,C,D,E,F,G,H,I,K,L,M,N,P,Q,R,S,T,V,W,Y,B,Z,X", type="error"); return()}
@@ -1296,7 +1303,12 @@ server <- function(input, output, session) {
   })
   observeEvent(input$clr_mot, motifs(data.frame(Name=character(),Pattern=character(),stringsAsFactors=FALSE)))
   output$mot_tbl <- renderTable(motifs(), striped=TRUE, hover=TRUE)
-  
+  output$mot_tbl_wrapper <- renderUI({
+    if (nrow(motifs()) > 0) {
+      tableOutput("mot_tbl") %>% tagAppendAttributes(style = "font-size:0.9em; margin-top:8px;")
+    } else NULL
+  })
+
   observeEvent(input$clear_example_data, {
     example_csv(NULL); example_fasta_seq(NULL); example_fasta_flank_seq(NULL)
     domains(data.frame(Name=character(),Start=integer(),End=numeric(),stringsAsFactors=FALSE))
@@ -1384,6 +1396,34 @@ server <- function(input, output, session) {
     ))
   })
   
+  observeEvent(input$upload_help_trigger, {
+    showModal(modalDialog(
+      title = "Format & download help",
+      easyClose = TRUE, size = "m",
+      footer = modalButton("Close"),
+      tags$div(
+        tags$h6("Table requirements", style = "margin-top:0; color:#dee2e6;"),
+        tags$p(class = "muted", style = "font-size:0.9rem; margin-bottom:1rem;",
+               "Your CSV must have at least two columns: ",
+               tags$b("DNA_variant"), " (HGVS, e.g. c.123delA) and ",
+               tags$b("patient_ID"), " as the individual identifier."),
+        tags$h6("Obtaining a FASTA", style = "color:#dee2e6;"),
+        tags$p(class = "muted", style = "font-size:0.9rem; margin-bottom:0.5rem;", "Example workflow:"),
+        tags$ul(class = "muted", style = "font-size:0.9rem; margin-bottom:1rem; padding-left:1.2rem;",
+                tags$li("Find the gene on ensembl.org"),
+                tags$li("Click Download sequence"),
+                tags$li("Included sequences: all; Format: FASTA; Flanks: 0"),
+                tags$li("Download")),
+        tags$h6("FASTA with flanks (for TITER)", style = "color:#dee2e6;"),
+        tags$p(class = "muted", style = "font-size:0.9rem; margin-bottom:0.5rem;",
+               "Same workflow as above, but set Flanks to 100 instead of 0."),
+        tags$h6("Why flanks for TITER?", style = "color:#dee2e6;"),
+        tags$p(class = "muted", style = "font-size:0.9rem; margin-bottom:0;",
+               "TITER uses a 203 bp window around the central bases. A CDS file with ±100 bp flanks (5'/3' UTR) is needed to evaluate start sites near the 5' end.")
+      )
+    ))
+  })
+
   observeEvent(input$show_bib, {
     showModal(modalDialog(
       title = "BibTeX — Schubert et al. (2025)",
@@ -1733,20 +1773,30 @@ Eine permanente inhaltliche Kontrolle der verlinkten Seiten ist jedoch ohne konk
         if (!reticulate::py_available(initialize = TRUE)) {
           showNotification("Python not available; skipping TITER analysis.", type = "error")
         } else {
-          # Optional sanity check for required modules (helpful on Connect)
-          needed <- c("numpy", "tensorflow", "Bio")
-          missing <- needed[!vapply(needed, reticulate::py_module_available, logical(1))]
-          if (length(missing)) {
-            stop("Missing Python modules for TITER: ", paste(missing, collapse = ", "),
-                 ". Make sure your startup venv install step ran on Connect.")
-          }
-          
-          reticulate::source_python(script_path)
-          
-          titer_summary <- read.csv(file.path(temp_titer_dir, "data",
-                                              "summary_patients_most_likely_additional_TIS.csv"),
-                                    stringsAsFactors = FALSE) %>% dplyr::select(-DNA_variant)
-          df <- dplyr::left_join(df, titer_summary, by = "patient_ID") %>%
+          titer_ok <- tryCatch({
+            # Optional sanity check for required modules (helpful on Connect)
+            needed <- c("numpy", "tensorflow", "Bio")
+            missing <- needed[!vapply(needed, reticulate::py_module_available, logical(1))]
+            if (length(missing)) {
+              stop("Missing Python modules for TITER: ", paste(missing, collapse = ", "),
+                   ". Make sure your startup venv install step ran on Connect.")
+            }
+            reticulate::source_python(script_path)
+            summary_path <- file.path(temp_titer_dir, "data", "summary_patients_most_likely_additional_TIS.csv")
+            if (!file.exists(summary_path))
+              stop("TITER did not produce summary file. Check that the Python script completed successfully.")
+            list(summary = read.csv(summary_path, stringsAsFactors = FALSE))
+          }, error = function(e) {
+            showNotification(
+              paste0("TITER analysis failed; results will not include non-canonical TIS columns. ", conditionMessage(e)),
+              type = "warning",
+              duration = 12
+            )
+            NULL
+          })
+          if (!is.null(titer_ok)) {
+            titer_summary <- titer_ok$summary %>% dplyr::select(-dplyr::any_of("DNA_variant"))
+            df <- dplyr::left_join(df, titer_summary, by = "patient_ID") %>%
             dplyr::mutate(
               Protein_from_most_likely_non_canonical_TIS          = sapply(RNA_sequence_most_likely_non_canonical_TIS, translate_prot),
               Protein_from_most_likely_non_canonical_in_frame_TIS = sapply(RNA_sequence_most_likely_non_canonical_in_frame_TIS, translate_prot),
@@ -1796,10 +1846,11 @@ Eine permanente inhaltliche Kontrolle der verlinkten Seiten ist jedoch ohne konk
               )
               df_inner
             }
+          }
         }
       }
       # --------------------------------------------------------------------------
-      
+
       incProgress(0.1, detail="Calculating frameshift metrics")
       if (cancel_requested()) {showNotification("Analysis cancelled.", type="warning"); shinyjs::disable("cancel"); result_data(NULL); return(NULL)}
       df <- df %>% dplyr::mutate(
