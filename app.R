@@ -687,7 +687,7 @@ button.intro-cta:active{
                      )
                    ),
                    bslib::card(
-                     bslib::card_header("Literature"),
+                     bslib::card_header("References"),
                      bslib::card_body(
                        tags$p(
                          style = "margin:0 0 8px 0;",
@@ -708,6 +708,59 @@ button.intro-cta:active{
                          actionLink("bib_titer_bg", "BibTeX", class = "bib-link")
                        )
                      )
+                   ),
+                   bslib::card(
+                     bslib::card_header("Collaborators"),
+                     bslib::card_body(
+                       tags$div(
+                         style = "font-size:0.9em; line-height:1.4; margin-bottom:10px;",
+                         tags$div("Antonia Tietzel", tags$sup("1,2")),
+                         tags$div("Hari Pottayil", tags$sup("1")),
+                         tags$div("Pilar Caro", tags$sup("1")),
+                         tags$div("Rachel B. Gilmore", tags$sup("1")),
+                         tags$div("Felix Franke", tags$sup("1")),
+                         tags$div("Ferdinand Althammer", tags$sup("1")),
+                         tags$div("Christian P. Schaaf", tags$sup("1"))
+                       ),
+                       tags$div(
+                         style = "font-size:0.88em; line-height:1.35;",
+                         tags$div(tags$b("Affiliations")),
+                         tags$div(tags$sup("1"), " Institute of Human Genetics, Heidelberg University, Heidelberg, Germany"),
+                         tags$div(tags$sup("2"), " Clinical Cooperation Unit Neuropathology, German Cancer Research Center (DKFZ), Heidelberg, Germany")
+                       )
+                     )
+                   ),
+                   bslib::card(
+                     bslib::card_header("Software"),
+                     bslib::card_body(
+                       tags$div(
+                         style = "font-size:0.9em; line-height:1.4;",
+                         tags$p(
+                           style = "margin-bottom:10px;",
+                           "R version 4.4.2"
+                         ),
+                         tags$p(
+                           style = "margin-bottom:0;",
+                           "Shiny package (version 1.11.1)"
+                         )
+                       )
+                     )
+                   ),
+                   bslib::card(
+                     bslib::card_header("IT Infrastructure"),
+                     bslib::card_body(
+                       tags$div(
+                         style = "font-size:0.9em; line-height:1.4;",
+                         tags$p(
+                           style = "margin-bottom:10px;",
+                           "de.NBI Cloud"
+                         ),
+                         tags$p(
+                           style = "margin-bottom:0;",
+                           "University Computing Centre Heidelberg"
+                         )
+                       )
+                     )
                    )
             )
           )
@@ -716,9 +769,9 @@ button.intro-cta:active{
     bslib::nav_item(
       actionLink("open_intro", "Introduction", class = "nav-link")
     )
-  )  # <-- THIS closes page_navbar()
+  )
   
-  ,  # <-- comma separating the two children of tagList()
+  ,
   
   tags$footer(
     class = "site-footer",
@@ -1733,7 +1786,6 @@ Eine permanente inhaltliche Kontrolle der verlinkten Seiten ist jedoch ohne konk
         }
         
         # Use the already-selected interpreter (RETICULATE_PYTHON) — do NOT switch envs here
-        # reticulate::use_virtualenv("titer-venv", required = TRUE)  # <-- REMOVE
         
         # Resolve & copy bundled `titer/` to a writable temp workdir
         app_dir <- normalizePath(getwd(), winslash = "/", mustWork = TRUE)
