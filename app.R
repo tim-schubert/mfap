@@ -406,10 +406,74 @@ ui <- tagList(
       }
 
       .navbar-nav{ margin-left:auto; gap: 30px; }
+      .navbar .navbar-toggler,
+      .navbar .navbar-toggle{
+        border:0 !important;
+        background:transparent !important;
+        background-color:transparent !important;
+        background-image:none !important;
+        box-shadow:none !important;
+        outline:none !important;
+        padding:.3rem !important;
+        appearance:none !important;
+        -webkit-appearance:none !important;
+      }
+      .navbar .navbar-toggler:focus,
+      .navbar .navbar-toggler:focus-visible,
+      .navbar .navbar-toggler:hover,
+      .navbar .navbar-toggler:active,
+      .navbar .navbar-toggle:focus,
+      .navbar .navbar-toggle:hover,
+      .navbar .navbar-toggle:active{
+        border:0 !important;
+        background:transparent !important;
+        background-color:transparent !important;
+        background-image:none !important;
+        box-shadow:none !important;
+        outline:none !important;
+      }
+      .navbar .navbar-toggler-icon{
+        width:1.15rem !important;
+        height:1.15rem !important;
+        background-color:transparent !important;
+        background:none !important;
+        background-repeat:no-repeat !important;
+        background-position:center !important;
+        background-size:100% 100% !important;
+        background-image:url(\"data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath fill='none' stroke='rgba(107,114,128,0.95)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2.0' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e\") !important;
+      }
+      .navbar .navbar-toggle .icon-bar{
+        display:block !important;
+        position:static !important;
+        width:20px !important;
+        height:2px !important;
+        margin:0 !important;
+        border-radius:999px !important;
+        background:rgba(107,114,128,0.95) !important;
+        background-color:rgba(107,114,128,0.95) !important;
+        box-shadow:none !important;
+        transform:none !important;
+      }
+      .navbar .navbar-toggle .icon-bar + .icon-bar{
+        margin-top:5px !important;
+      }
+      html[data-mfap-theme='light'] .navbar-toggler-icon,
+      html[data-bs-theme='light'] .navbar-toggler-icon{
+        background-image:url(\"data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath fill='none' stroke='rgba(107,114,128,0.95)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2.0' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e\") !important;
+      }
       @media (max-width: 768px){
         .brand-title{   font-size: 1.55rem; }
         .brand-subtitle{font-size: 0.98rem; }
-        .navbar-nav{ gap: 18px; }
+        .navbar-collapse{ margin-top:8px; }
+        .navbar-nav{
+          margin-left:0;
+          gap:0 !important;
+        }
+        .navbar-nav .nav-link{
+          padding:.4rem .35rem;
+          font-size:.90rem;
+        }
+        .theme-toggle-link{padding:.25rem .45rem !important; line-height:1;}
       }
       .navbar-nav .nav-link{padding:.5rem .6rem;color:var(--mfap-nav-link) !important;border-radius:0 !important;border-bottom:2px solid transparent;}
       .navbar-nav .nav-link:hover{color:var(--mfap-link) !important;background:transparent !important;border-bottom-color:var(--mfap-link);}
@@ -852,6 +916,29 @@ button.intro-cta:active{
         .site-footer__logo{ height:42px; }
         .site-footer__center{ font-size:0.88rem; }
       }
+      .compact-btn-row{
+        display:flex;
+        flex-wrap:nowrap;
+        justify-content:flex-start;
+        gap:0;
+        padding-left:0;
+        padding-right:0;
+      }
+      .compact-btn-row > [class*='col-']{
+        width:auto !important;
+        max-width:none !important;
+        flex:0 0 auto !important;
+        padding-left:0;
+        padding-right:0;
+      }
+      .compact-btn-row > [class*='col-']:first-child{
+        padding-left:15px;
+        padding-right:5px;
+      }
+      .compact-btn-row > [class*='col-']:last-child{
+        padding-left:5px;
+        padding-right:15px;
+      }
     ")),
       tags$script(HTML("
       (function(){
@@ -862,7 +949,8 @@ button.intro-cta:active{
           var el = document.getElementById('theme_toggle');
           if (!el) return;
           if (el.parentElement) {
-            el.parentElement.style.marginLeft = 'auto';
+            el.parentElement.style.marginLeft =
+              (window.matchMedia && window.matchMedia('(max-width: 768px)').matches) ? '0' : 'auto';
           }
           if (mode === 'light') {
             el.textContent = '\u263C';
@@ -896,7 +984,6 @@ button.intro-cta:active{
           var current = document.documentElement.getAttribute('data-mfap-theme') || 'dark';
           applyTheme(current === 'light' ? 'dark' : 'light', true);
         };
-
         document.addEventListener('DOMContentLoaded', function(){
           var saved = null;
           try { saved = localStorage.getItem(storageKey); } catch(e) {}
@@ -1069,8 +1156,9 @@ button.intro-cta:active{
                     column(4, numericInput("dom_end","End AA", 1, min = 1))
                   ),
                   fluidRow(
-                    column(6, actionButton("add_dom","Add", class="btn btn-info")),
-                    column(6, actionButton("clr_dom","Clear", class="btn btn-secondary"))
+                    class = "compact-btn-row",
+                    column(6, class = "col-6", actionButton("add_dom","Add", class="btn btn-info")),
+                    column(6, class = "col-6", actionButton("clr_dom","Clear", class="btn btn-secondary"))
                   ),
                   uiOutput("dom_tbl_wrapper")
                 )
@@ -1081,8 +1169,9 @@ button.intro-cta:active{
                 bslib::card_body(
                   fluidRow(column(6, textInput("mot_name","Name")),
                            column(6, textInput("mot_pattern","AA sequence"))),
-                  fluidRow(column(6, actionButton("add_mot","Add", class="btn btn-info")),
-                           column(6, actionButton("clr_mot","Clear", class="btn btn-secondary"))),
+                  fluidRow(class = "compact-btn-row",
+                           column(6, class = "col-6", actionButton("add_mot","Add", class="btn btn-info")),
+                           column(6, class = "col-6", actionButton("clr_mot","Clear", class="btn btn-secondary"))),
                   uiOutput("mot_tbl_wrapper")
                 )
               ),
@@ -1092,8 +1181,9 @@ button.intro-cta:active{
                   tags$p(class="muted", style="font-size:0.9em;",
                          "Load a fictional cohort with example variants, reference sequences, and example domains/motifs."),
                   fluidRow(
-                    column(6, actionButton("load_example_data", "Load demo", class="btn btn-info")),
-                    column(6, actionButton("clear_example_data", "Clear demo", class="btn btn-secondary"))
+                    class = "compact-btn-row",
+                    column(6, class = "col-6", actionButton("load_example_data", "Load demo", class="btn btn-info")),
+                    column(6, class = "col-6", actionButton("clear_example_data", "Clear demo", class="btn btn-secondary"))
                   )
                 )
               ),
@@ -1152,7 +1242,7 @@ button.intro-cta:active{
                    bslib::card(
                      bslib::card_header("Overview"),
                      bslib::card_body(
-                       p(mfap()," is a framework developed by Tim Schubert and colleagues at the Institute of Human Genetics of Heidelberg University (Germany), which allows users to calculate and predict DNA and protein level consequences of genetic variation in single-exon genes. ",mfap()," requires minimal user input: a list of variants in HGVS cDNA notation and the reference DNA sequence of the gene of interest.")
+                      p(mfap()," is a framework, which allows users to calculate and predict DNA and protein level features resulting from genetic variation in single-exon (i.e., intronless) genes. ",mfap()," requires minimal user input: a list of variants in HGVS cDNA notation and the reference DNA sequence of the gene of interest.")
                      )
                    ),
                    bslib::card(
@@ -1214,11 +1304,12 @@ button.intro-cta:active{
                        )
                      )
                    ),
-                   bslib::card(
-                     bslib::card_header("Collaborators"),
+                  bslib::card(
+                    bslib::card_header("Contributors"),
                      bslib::card_body(
                        tags$div(
                          style = "font-size:0.9em; line-height:1.4; margin-bottom:10px;",
+                        tags$div("Tim Schubert", tags$sup("1")),
                          tags$div("Antonia Tietzel", tags$sup("1,2")),
                          tags$div("Hari Pottayil", tags$sup("1")),
                          tags$div("Pilar Caro", tags$sup("1")),
