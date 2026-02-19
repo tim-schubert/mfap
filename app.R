@@ -6,7 +6,7 @@ library(dplyr)
 library(Biostrings)
 library(bslib)
 
-# ———————————————— PYTHON VENV SETUP ————————————————
+# Python venv setup
 venv_name   <- "r-reticulate"
 venv_path   <- file.path("~", ".virtualenvs", venv_name)
 # On macOS, python3 may be /opt/homebrew/bin/python3 or /usr/local/bin/python3 if /usr/bin/python3 is missing
@@ -28,9 +28,7 @@ library(reticulate)
 use_python(venv_python, required = TRUE)
 py_available(initialize = TRUE)
 
-#------------------------------------------------------------------------------#
-# 0. parse_mutation 
-#------------------------------------------------------------------------------#
+# parse_mutation
 parse_mutation <- function(mutation, wildtype_seq) {
   info <- list(
     Locus=NA_integer_, Mutation_Type=NA_character_, New_Base=NA_character_,
@@ -119,18 +117,14 @@ parse_mutation <- function(mutation, wildtype_seq) {
   info
 }
 
-#------------------------------------------------------------------------------#
-# 1. translation
-#------------------------------------------------------------------------------#
+# translation
 translate_prot <- function(dna_seq) {
   if (is.na(dna_seq) || nchar(dna_seq)<3) return(NA_character_)
   prot_full <- suppressWarnings(as.character(translate(DNAString(dna_seq), if.fuzzy.codon="X")))
   if (grepl("\\*", prot_full)) substr(prot_full, 1, regexpr("\\*", prot_full)[1]-1) else prot_full
 }
 
-#------------------------------------------------------------------------------#
-# 2. Refinement helpers
-#------------------------------------------------------------------------------#
+# Refinement helpers
 refine_point <- function(locus, seq, wt_seq, codon_tbl) {
   idx <- floor((locus-1)/3)*3 + 1
   if (is.na(locus) || (idx+2)>nchar(wt_seq) || (idx+2)>nchar(seq)) return("Point")
@@ -146,9 +140,7 @@ refine_indel <- function(mt, del, dup, ins) {
   if (net %% 3 == 0) "In-Frame indel" else "Frameshifting indel"
 }
 
-#------------------------------------------------------------------------------#
-# UI 
-#------------------------------------------------------------------------------#
+# UI
 mfap <- function(){
   tags$span(
     class="mfap-brand",
@@ -211,10 +203,89 @@ ui <- tagList(
       .page-container{max-width:1180px;margin:0 auto;padding:0 14px;}
       .navbar .container-fluid{max-width:1180px;margin:0 auto;padding:0 14px;}
       .lit-item p{ margin:0 0 6px 0; }
-      .navbar{background:#1d1f21 !important;border-bottom:1px solid rgba(255,255,255,.08)!important;box-shadow:none !important;}
+      .navbar{background:var(--mfap-navbar-bg) !important;border-bottom:1px solid var(--mfap-navbar-border)!important;box-shadow:none !important;}
       .navbar-brand{margin-right:auto;}
       :root{
         --mfap-font: 'Libre Bodoni', Georgia, 'Times New Roman', serif;
+        --mfap-navbar-bg: #1d1f21;
+        --mfap-navbar-border: rgba(255,255,255,.08);
+        --mfap-brand-title: #ffffff;
+        --mfap-brand-subtitle: #e5e7eb;
+        --mfap-link: #4dabf7;
+        --mfap-link-hover: #74c0fc;
+        --mfap-muted: #adb5bd;
+        --mfap-nav-link: #e9ecef;
+        --mfap-card-bg: #202326;
+        --mfap-card-header-bg: #1b1e22;
+        --mfap-card-border: rgba(255,255,255,0.08);
+        --mfap-card-header-border: rgba(255,255,255,0.06);
+        --mfap-action-dock-bg: rgba(32,35,38,0.35);
+        --mfap-action-dock-border: rgba(255,255,255,0.12);
+        --mfap-action-dock-shadow: 0 6px 24px rgba(0,0,0,0.25);
+        --mfap-details-bg: #262a2e;
+        --mfap-details-bg-open: #2d3236;
+        --mfap-details-border: rgba(255,255,255,0.08);
+        --mfap-help-trigger: #6c757d;
+        --mfap-help-trigger-hover: #adb5bd;
+        --mfap-disclaimer-bg: rgba(255,255,255,0.03);
+        --mfap-disclaimer-border: rgba(255,255,255,0.1);
+        --mfap-disclaimer-text: #868e96;
+        --mfap-disclaimer-sep: #495057;
+        --mfap-about-lead: #cfd4da;
+        --mfap-about-notes-bg: #23272b;
+        --mfap-about-notes-border: rgba(255,255,255,.06);
+        --mfap-bib-bg: #1f1f1f;
+        --mfap-bib-border: #2a2a2a;
+        --mfap-modal-bg: #24272b;
+        --mfap-modal-border: rgba(255,255,255,0.14);
+        --mfap-footer-color: #ffffff;
+        --mfap-intro-bg: rgba(255,255,255,0.06);
+        --mfap-intro-border: rgba(255,255,255,.14);
+        --mfap-intro-text: #e9ecef;
+        --mfap-intro-hover-text: #ffffff;
+        --bs-body-bg: #2b3138;
+      }
+
+      html[data-mfap-theme='light']{
+        --mfap-navbar-bg: #ffffff;
+        --mfap-navbar-border: rgba(17,24,39,.10);
+        --mfap-brand-title: #111827;
+        --mfap-brand-subtitle: #4b5563;
+        --mfap-link: #2563eb;
+        --mfap-link-hover: #1d4ed8;
+        --mfap-muted: #6b7280;
+        --mfap-nav-link: #1f2937;
+        --mfap-card-bg: #ffffff;
+        --mfap-card-header-bg: #f7f9fc;
+        --mfap-card-border: rgba(17,24,39,0.10);
+        --mfap-card-header-border: rgba(17,24,39,0.08);
+        --mfap-action-dock-bg: rgba(255,255,255,0.76);
+        --mfap-action-dock-border: rgba(17,24,39,0.14);
+        --mfap-action-dock-shadow: 0 8px 24px rgba(15,23,42,0.10);
+        --mfap-details-bg: #f8fafc;
+        --mfap-details-bg-open: #f1f5f9;
+        --mfap-details-border: rgba(17,24,39,0.12);
+        --mfap-help-trigger: #4b5563;
+        --mfap-help-trigger-hover: #1f2937;
+        --mfap-disclaimer-bg: rgba(15,23,42,0.04);
+        --mfap-disclaimer-border: rgba(15,23,42,0.18);
+        --mfap-disclaimer-text: #4b5563;
+        --mfap-disclaimer-sep: #94a3b8;
+        --mfap-about-lead: #334155;
+        --mfap-about-notes-bg: #f8fafc;
+        --mfap-about-notes-border: rgba(17,24,39,0.10);
+        --mfap-bib-bg: #f8fafc;
+        --mfap-bib-border: #cbd5e1;
+        --mfap-modal-bg: #eef2f7;
+        --mfap-modal-border: rgba(17,24,39,0.18);
+        --mfap-footer-color: #1f2937;
+        --mfap-intro-bg: rgba(15,23,42,0.05);
+        --mfap-intro-border: rgba(15,23,42,0.18);
+        --mfap-intro-text: #1f2937;
+        --mfap-intro-hover-text: #1f2937;
+        --bs-body-bg: #e1e7ef;
+        --bs-body-color: #1f2937;
+        --bs-border-color: #dbe2ea;
       }
       
       #shiny-modal.mfap-intro-modal{
@@ -244,6 +315,14 @@ ui <- tagList(
         overflow: auto;
         -webkit-overflow-scrolling: touch;
       }
+      .modal-content{
+        background: var(--mfap-modal-bg);
+        color: var(--bs-body-color);
+        border: 1px solid var(--mfap-modal-border);
+      }
+      .modal-header{border-bottom:1px solid var(--mfap-modal-border);}
+      .modal-footer{border-top:1px solid var(--mfap-modal-border);}
+      .modal-title{color:var(--bs-body-color);}
 
       
       .mfap-brand{
@@ -261,7 +340,7 @@ ui <- tagList(
         font-family: var(--mfap-font);
         font-weight: 800;
         letter-spacing: .2px;
-        color: #ffffff !important;
+        color: var(--mfap-brand-title) !important;
         font-size: 2.2rem;
         line-height: 1.05;
       }
@@ -276,7 +355,7 @@ ui <- tagList(
         font-family: inherit;
         font-weight: 400;
         font-size: 1.05rem;
-        color: #e5e7eb !important;
+        color: var(--mfap-brand-subtitle) !important;
         margin-top: 2px;
         letter-spacing: 0;
       }
@@ -284,58 +363,58 @@ ui <- tagList(
       .mfap-f{
         font-style: italic;
         font-weight: inherit;
-        margin: 0 -0.03em;   /* optical kerning tweak */
+        margin: 0 -0.03em;
       }
 
 
 
       a{
-        color:#4dabf7;
+        color:var(--mfap-link);
         text-decoration: none;
       }
       a:hover, a:focus{
-        color:#74c0fc;
+        color:var(--mfap-link-hover);
         text-decoration: none;
       }
       .site-footer a{
-        color:#adb5bd !important;
+        color:var(--mfap-muted) !important;
         text-decoration:none;
       }
       
       .site-footer a:hover,
       .site-footer a:focus{
-        color:#4dabf7 !important;
+        color:var(--mfap-link) !important;
         text-decoration:none;
       }
 
       .navbar-nav{ margin-left:auto; gap: 30px; }
-      /* responsive tweak */
       @media (max-width: 768px){
         .brand-title{   font-size: 1.55rem; }
         .brand-subtitle{font-size: 0.98rem; }
         .navbar-nav{ gap: 18px; }
       }
-      .navbar-nav .nav-link{padding:.5rem .6rem;color:#e9ecef !important;border-radius:0 !important;border-bottom:2px solid transparent;}
-      .navbar-nav .nav-link:hover{color:#4dabf7 !important;background:transparent !important;border-bottom-color:#4dabf7;}
-      .navbar-nav .nav-link.active{color:#4dabf7 !important;background:transparent !important;border-bottom-color:#4dabf7;}
+      .navbar-nav .nav-link{padding:.5rem .6rem;color:var(--mfap-nav-link) !important;border-radius:0 !important;border-bottom:2px solid transparent;}
+      .navbar-nav .nav-link:hover{color:var(--mfap-link) !important;background:transparent !important;border-bottom-color:var(--mfap-link);}
+      .navbar-nav .nav-link.active{color:var(--mfap-link) !important;background:transparent !important;border-bottom-color:var(--mfap-link);}
 
-      .card{border:1px solid rgba(255,255,255,0.08)!important;border-radius:10px!important;background:#202326;}
-      .card-header{background:#2a2e32!important;border-bottom:1px solid rgba(255,255,255,0.06)!important;color:#fff;padding:10px 14px!important;font-weight:600;}
+      .card{border:1px solid var(--mfap-card-border)!important;border-radius:10px!important;background:var(--mfap-card-bg);}
+      .card-header{background:var(--mfap-card-header-bg)!important;border-bottom:1px solid var(--mfap-card-header-border)!important;color:var(--bs-body-color)!important;padding:10px 14px!important;font-weight:600;}
       .card-body{padding:14px!important;}
-      .card-footer{background:#202326;border-top:1px solid rgba(255,255,255,.06);padding:12px 14px;}
+      .card-footer{background:var(--mfap-card-bg);border-top:1px solid var(--mfap-card-header-border);padding:12px 14px;}
 
       .sidebar{position:sticky;top:16px;max-height:calc(100vh - 32px);overflow:auto;}
       .action-dock{
           position: sticky;
-          bottom: 0;
-          background: rgba(32,35,38,0.35);      /* more see-through */
+          bottom: 14px;
+          background: var(--mfap-action-dock-bg);
           backdrop-filter: blur(8px) saturate(120%);
           -webkit-backdrop-filter: blur(8px) saturate(120%); /* Safari */
-          border: 1px solid rgba(255,255,255,0.12);
-          box-shadow: 0 6px 24px rgba(0,0,0,0.25);
+          border: 1px solid var(--mfap-action-dock-border);
+          box-shadow: var(--mfap-action-dock-shadow);
           padding: 10px 12px;
           border-radius: 12px;
           margin-top: 10px;
+          margin-bottom: 18px;
           z-index: 2;
         }
       .action-row{display:flex;gap:8px;}
@@ -359,42 +438,74 @@ ui <- tagList(
       }
 
 
-      details{background:#262a2e;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:8px 10px;}
-      details>summary{cursor:pointer;font-weight:600;color:#e9ecef;list-style:none;}
+      details{background:var(--mfap-details-bg);border:1px solid var(--mfap-details-border);border-radius:8px;padding:8px 10px;}
+      details>summary{cursor:pointer;font-weight:600;color:var(--bs-body-color);list-style:none;}
       details>summary::-webkit-details-marker{display:none;}
-      details[open]{background:#2d3236;}
+      details[open]{background:var(--mfap-details-bg-open);}
       .upload-card-body{padding-top:0.35rem;padding-bottom:0.35rem;}
       .upload-card-body > *{margin:0;margin-top:0.08rem;}
       .upload-card-body > *:first-child{margin-top:0;}
       .upload-card-body .form-group,.upload-card-body .shiny-input-container{margin-bottom:0 !important;}
       .upload-fields{display:flex;flex-direction:column;gap:0.05rem;}
       .upload-fields .form-group,.upload-fields .shiny-input-container{margin-bottom:0 !important;}
-      .help-trigger{font-size:0.82rem;color:#6c757d;text-decoration:none;display:inline-flex;align-items:center;gap:6px;}
-      .help-trigger:hover{color:#adb5bd;text-decoration:none;}
+      .help-trigger{font-size:0.82rem;color:var(--mfap-help-trigger);text-decoration:none;display:inline-flex;align-items:center;gap:6px;}
+      .help-trigger:hover{color:var(--mfap-help-trigger-hover);text-decoration:none;}
       .help-trigger-icon{opacity:0.85;font-size:0.95em;}
-      .disclaimer-bar{background:rgba(255,255,255,0.03);border-left:3px solid rgba(255,255,255,0.1);
+      .disclaimer-bar{background:var(--mfap-disclaimer-bg);border-left:3px solid var(--mfap-disclaimer-border);
         border-radius:6px;padding:10px 14px;margin-bottom:16px;font-size:0.88rem;
         display:flex;flex-wrap:wrap;align-items:center;gap:6px;}
-      .disclaimer-one-line{margin:0;color:#868e96;}
-      .disclaimer-link{color:#6c757d;text-decoration:none;}
-      .disclaimer-link:hover{color:#adb5bd;text-decoration:underline;}
-      .disclaimer-sep{color:#495057;}
-      .disclaimer-cite{color:#868e96;}
+      .disclaimer-one-line{margin:0;color:var(--mfap-disclaimer-text);}
+      .disclaimer-link{color:var(--mfap-help-trigger);text-decoration:none;}
+      .disclaimer-link:hover{color:var(--mfap-help-trigger-hover);text-decoration:underline;}
+      .disclaimer-sep{color:var(--mfap-disclaimer-sep);}
+      .disclaimer-cite{color:var(--mfap-disclaimer-text);}
       .disclaimer-bib{margin-left:2px;}
-      .muted{color:#adb5bd;}
+      .muted{color:var(--mfap-muted);}
       .download-row{display:flex;justify-content:flex-end;margin:0;}
 
       .about-mfap .card-body{padding:12px 14px !important;}
-      .about-mfap .lead-line{font-size:1.15rem;color:#cfd4da;margin-bottom:10px;}
-      .about-mfap .notes{background:#23272b;border:1px solid rgba(255,255,255,.06);
+      .about-mfap .lead-line{font-size:1.15rem;color:var(--mfap-about-lead);margin-bottom:10px;}
+      .about-mfap .notes{background:var(--mfap-about-notes-bg);border:1px solid var(--mfap-about-notes-border);
                          border-radius:10px;padding:12px 14px;margin-top:8px;}
       .about-mfap .notes p{margin:0 0 6px 0;font-size:.98rem;line-height:1.35;}
       .about-mfap .cite-row{display:flex;align-items:center;gap:.5rem;margin-top:10px;}
       .about-mfap .bib-link{cursor:pointer;text-decoration:underline;}
 
       
-      #bibtex_block{white-space:pre-wrap;font-size:.86rem;background:#1f1f1f;
-      padding:10px;border-radius:8px;border:1px solid #2a2a2a;}
+      #bibtex_block{white-space:pre-wrap;font-size:.86rem;background:var(--mfap-bib-bg);
+      padding:10px;border-radius:8px;border:1px solid var(--mfap-bib-border);}
+      .bib-block{
+        white-space:pre-wrap;
+        font-size:.86rem;
+        background:var(--mfap-bib-bg);
+        color:var(--bs-body-color);
+        padding:10px;
+        border-radius:8px;
+        border:1px solid var(--mfap-bib-border);
+        margin:0;
+      }
+      .intro-example-shell{
+        border:1px solid var(--mfap-intro-border);
+        border-radius:10px;
+        padding:10px 12px;
+        margin:12px 0;
+        background:var(--mfap-intro-bg);
+      }
+      .intro-example-table{
+        margin:0;
+        width:auto;
+        display:inline-table;
+        font-size:0.85rem;
+        line-height:1.1;
+      }
+      .intro-example-table th,
+      .intro-example-table td{
+        padding:2px 6px;
+      }
+      .modal-subheading{
+        margin-top:0;
+        color:var(--bs-body-color);
+      }
       
       .sidebar.well,
       .well.sidebar {
@@ -418,16 +529,22 @@ ui <- tagList(
         gap:16px;
       }
       .site-footer__logo{ height:60px; flex:0 0 auto; }
-      .site-footer__center{ flex:1 1 auto; text-align:center; color:#adb5bd; }
+      html[data-mfap-theme='light'] .site-footer__logo{
+        filter: invert(1);
+      }
+      .site-footer__center{ flex:1 1 auto; text-align:center; color:var(--mfap-muted); }
       
       .site-footer__link:hover,
       .site-footer__link:focus{
-        color:#4dabf7;      
+        color:var(--mfap-link);      
         text-decoration:none;
       }
       .site-footer{
   position: relative;
   z-index: 10;
+  background: var(--mfap-navbar-bg) !important;
+  border-top: 1px solid var(--mfap-navbar-border);
+  color: var(--mfap-footer-color) !important;
 }
       
 button.intro-cta{
@@ -436,10 +553,10 @@ button.intro-cta{
   padding:12px 14px;
   border-radius:10px;
 
-  background: rgba(255,255,255,0.06);
-  border:1px solid rgba(255,255,255,.14);
+  background: var(--mfap-intro-bg);
+  border:1px solid var(--mfap-intro-border);
 
-  color:#e9ecef !important;
+  color:var(--mfap-intro-text) !important;
   text-align:center;
 
   position: relative;
@@ -466,10 +583,10 @@ button.intro-cta > span{
 button.intro-cta:hover,
 button.intro-cta:focus,
 button.intro-cta:active{
-  color:#ffffff !important;
+  color:var(--mfap-intro-hover-text) !important;
   border-color: rgba(77,171,247,0.65);
   box-shadow: 0 10px 26px rgba(0,0,0,.35);
-  background: rgba(255,255,255,0.06) !important;
+  background: var(--mfap-intro-bg) !important;
 }
 
 button.intro-cta:hover::before{
@@ -480,12 +597,195 @@ button.intro-cta:active{
   transform: translateY(1px);
 }
 
+      html[data-mfap-theme='light'] #shiny-modal [style*='color:#dee2e6']{
+        color:#374151 !important;
+      }
+      html[data-mfap-theme='light'] [style*='color:#ccc']{
+        color:#64748b !important;
+      }
+      .theme-toggle-link{
+        cursor:pointer;
+        user-select:none;
+        font-size:1.15rem;
+        line-height:1;
+        min-width:auto;
+        text-align:center;
+        border-radius:0 !important;
+        border-bottom-color:transparent !important;
+        padding:.45rem .25rem !important;
+        margin-left:0 !important;
+        background:transparent !important;
+        box-shadow:none !important;
+      }
+      .theme-toggle-link:hover,
+      .theme-toggle-link:focus{
+        background:transparent !important;
+        border-bottom-color:transparent !important;
+        box-shadow:none !important;
+      }
+      html[data-mfap-theme='light'] .form-check-input{
+        background-color:#f8fafc;
+        border-color:#64748b;
+      }
+      html[data-mfap-theme='light'] .form-check-input:focus{
+        border-color:#475569;
+        box-shadow:0 0 0 .2rem rgba(37,99,235,.18);
+      }
+      html[data-mfap-theme='light'] .form-check-input:checked{
+        background-color:#2563eb;
+        border-color:#1d4ed8;
+      }
+      .shiny-input-container .checkbox label{
+        display:flex;
+        align-items:flex-start;
+        gap:.55rem;
+      }
+      .shiny-input-container .checkbox input[type='checkbox']{
+        appearance:auto !important;
+        -webkit-appearance:checkbox !important;
+        opacity:1 !important;
+        position:relative !important;
+        margin:0;
+        margin-top:.22rem;
+        width:1rem;
+        height:1rem;
+        flex:0 0 auto;
+      }
+      html[data-mfap-theme='light'] .shiny-input-container .checkbox input[type='checkbox']{
+        accent-color:#2563eb;
+      }
+      html[data-mfap-theme='light'] .shiny-input-container .input-group-btn .btn,
+      html[data-mfap-theme='light'] .shiny-input-container .btn-file{
+        background-color:#616b77 !important;
+        border-color:#616b77 !important;
+        color:#ffffff !important;
+      }
+      html[data-mfap-theme='light'] .shiny-input-container .input-group-btn .btn:hover,
+      html[data-mfap-theme='light'] .shiny-input-container .input-group-btn .btn:focus,
+      html[data-mfap-theme='light'] .shiny-input-container .btn-file:hover,
+      html[data-mfap-theme='light'] .shiny-input-container .btn-file:focus{
+        background-color:#54606d !important;
+        border-color:#54606d !important;
+        color:#ffffff !important;
+      }
+      html[data-mfap-theme='light'] .shiny-input-container .input-group-btn .btn:active,
+      html[data-mfap-theme='light'] .shiny-input-container .btn-file:active{
+        background-color:#4b5563 !important;
+        border-color:#4b5563 !important;
+        color:#ffffff !important;
+      }
+      html[data-mfap-theme='light'] #clear_uploads,
+      html[data-mfap-theme='light'] #clr_dom,
+      html[data-mfap-theme='light'] #clr_mot,
+      html[data-mfap-theme='light'] #clear_example_data{
+        background-color:#616b77 !important;
+        border-color:#616b77 !important;
+        color:#ffffff !important;
+      }
+      html[data-mfap-theme='light'] #clear_uploads:hover,
+      html[data-mfap-theme='light'] #clear_uploads:focus,
+      html[data-mfap-theme='light'] #clr_dom:hover,
+      html[data-mfap-theme='light'] #clr_dom:focus,
+      html[data-mfap-theme='light'] #clr_mot:hover,
+      html[data-mfap-theme='light'] #clr_mot:focus,
+      html[data-mfap-theme='light'] #clear_example_data:hover,
+      html[data-mfap-theme='light'] #clear_example_data:focus{
+        background-color:#54606d !important;
+        border-color:#54606d !important;
+        color:#ffffff !important;
+      }
+      html[data-mfap-theme='light'] #clear_uploads:active,
+      html[data-mfap-theme='light'] #clr_dom:active,
+      html[data-mfap-theme='light'] #clr_mot:active,
+      html[data-mfap-theme='light'] #clear_example_data:active{
+        background-color:#4b5563 !important;
+        border-color:#4b5563 !important;
+        color:#ffffff !important;
+      }
+
 
 
       @media (max-width:768px){
         .site-footer__logo{ height:42px; }
         .site-footer__center{ font-size:0.88rem; }
       }
+    ")),
+      tags$script(HTML("
+      (function(){
+        var storageKey = 'mfap_theme_preference_v1';
+        var systemThemeQuery = null;
+
+        function setToggleLabel(mode){
+          var el = document.getElementById('theme_toggle');
+          if (!el) return;
+          if (el.parentElement) {
+            el.parentElement.style.marginLeft = 'auto';
+          }
+          if (mode === 'light') {
+            el.textContent = '\u263C';
+            el.setAttribute('title', 'Switch to dark mode');
+            el.setAttribute('aria-label', 'Switch to dark mode');
+          } else {
+            el.textContent = '\u263E';
+            el.setAttribute('title', 'Switch to light mode');
+            el.setAttribute('aria-label', 'Switch to light mode');
+          }
+        }
+
+        function getSystemPreferredTheme(){
+          return (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark';
+        }
+
+        function applyTheme(mode, persistPreference){
+          var resolved = mode === 'light' ? 'light' : 'dark';
+          document.documentElement.setAttribute('data-mfap-theme', resolved);
+          document.documentElement.setAttribute('data-bs-theme', resolved);
+          setToggleLabel(resolved);
+          if (persistPreference) {
+            try { localStorage.setItem(storageKey, resolved); } catch(e) {}
+          }
+        }
+
+        window.mfapApplyTheme = function(mode){
+          applyTheme(mode, true);
+        };
+        window.mfapToggleTheme = function(){
+          var current = document.documentElement.getAttribute('data-mfap-theme') || 'dark';
+          applyTheme(current === 'light' ? 'dark' : 'light', true);
+        };
+
+        document.addEventListener('DOMContentLoaded', function(){
+          var saved = null;
+          try { saved = localStorage.getItem(storageKey); } catch(e) {}
+          if (saved === 'light' || saved === 'dark') {
+            applyTheme(saved, false);
+          } else {
+            applyTheme(getSystemPreferredTheme(), false);
+          }
+
+          if (window.matchMedia) {
+            systemThemeQuery = window.matchMedia('(prefers-color-scheme: light)');
+            var onSystemThemeChange = function(e){
+              var explicit = null;
+              try { explicit = localStorage.getItem(storageKey); } catch(err) {}
+              if (explicit === 'light' || explicit === 'dark') return;
+              applyTheme(e.matches ? 'light' : 'dark', false);
+            };
+            if (systemThemeQuery.addEventListener) {
+              systemThemeQuery.addEventListener('change', onSystemThemeChange);
+            } else if (systemThemeQuery.addListener) {
+              systemThemeQuery.addListener(onSystemThemeChange);
+            }
+          }
+        });
+
+        document.addEventListener('click', function(e){
+          var btn = e.target.closest('#theme_toggle');
+          if (!btn) return;
+          e.preventDefault();
+          window.mfapToggleTheme();
+        });
+      })();
     ")),
       tags$script(HTML("
   Shiny.addCustomMessageHandler('mfap_intro_once', function(msg){
@@ -520,7 +820,7 @@ button.intro-cta:active{
     "))
     ),
     
-    # ————— Analyze
+    # Analysis tab
     bslib::nav_panel(
       "Analysis",
       div(class="page-container",
@@ -586,7 +886,7 @@ button.intro-cta:active{
                   tags$p(class="muted", style="font-size:0.9em;",
                          "Load a fictional cohort with example variants, reference sequences, and example domains/motifs."),
                   fluidRow(
-                    column(6, actionButton("load_example_data", "Load demo", class="btn btn-dark")),
+                    column(6, actionButton("load_example_data", "Load demo", class="btn btn-info")),
                     column(6, actionButton("clear_example_data", "Clear demo", class="btn btn-secondary"))
                   )
                 )
@@ -638,7 +938,7 @@ button.intro-cta:active{
       )
     ),
     
-    # ————— Background
+    # Background tab
     bslib::nav_panel(
       "Background",
       div(class="page-container",
@@ -768,6 +1068,14 @@ button.intro-cta:active{
     ),  # end nav_panel Background
     bslib::nav_item(
       actionLink("open_intro", "Introduction", class = "nav-link")
+    ),
+    bslib::nav_item(
+      tags$a(
+        id = "theme_toggle",
+        href = "#",
+        class = "nav-link theme-toggle-link",
+        "☾"
+      )
     )
   )
   
@@ -775,7 +1083,6 @@ button.intro-cta:active{
   
   tags$footer(
     class = "site-footer",
-    style = "background:transparent; color:#fff;",
     tags$div(
       class = "site-footer__inner",
       
@@ -824,9 +1131,7 @@ button.intro-cta:active{
 
 
 
-#------------------------------------------------------------------------------#
 # Server
-#------------------------------------------------------------------------------#
 server <- function(input, output, session) {
   example_csv <- reactiveVal(NULL)
   example_fasta_seq <- reactiveVal(NULL)
@@ -1129,50 +1434,42 @@ server <- function(input, output, session) {
         ),
         
         tags$div(
-          style = "border:1px solid rgba(255,255,255,.12); border-radius:10px;
-                 padding:10px 12px; margin:12px 0; background: rgba(0,0,0,.15);",
+          class = "intro-example-shell",
           
           tags$table(
-            class = "table table-sm table-dark",
-            style = paste(
-              "margin:0;",
-              "width:auto;",           # don’t stretch full width
-              "display:inline-table;", # keep it compact
-              "font-size:0.85rem;",    # smaller text
-              "line-height:1.1;"       # tighter rows
-            ),
+            class = "table table-sm intro-example-table",
             tags$thead(
               tags$tr(
-                tags$th("patient_ID", style="padding:2px 6px;"),
-                tags$th("DNA_variant", style="padding:2px 6px;"),
-                tags$th("severity", style="padding:2px 6px;"),
-                tags$th("…", style="padding:2px 6px;")
+                tags$th("patient_ID"),
+                tags$th("DNA_variant"),
+                tags$th("severity"),
+                tags$th("…")
               )
             ),
             tags$tbody(
               tags$tr(
-                tags$td("P001", style="padding:2px 6px;"),
-                tags$td("c.123delA", style="padding:2px 6px;"),
-                tags$td("0.2", style="padding:2px 6px;"),
-                tags$td("…", style="padding:2px 6px;")
+                tags$td("P001"),
+                tags$td("c.123delA"),
+                tags$td("0.2"),
+                tags$td("…")
               ),
               tags$tr(
-                tags$td("P002", style="padding:2px 6px;"),
-                tags$td("c.456C>T", style="padding:2px 6px;"),
-                tags$td("0.8", style="padding:2px 6px;"),
-                tags$td("…", style="padding:2px 6px;")
+                tags$td("P002"),
+                tags$td("c.456C>T"),
+                tags$td("0.8"),
+                tags$td("…")
               ),
               tags$tr(
-                tags$td("P003", style="padding:2px 6px;"),
-                tags$td("c.89_90insG", style="padding:2px 6px;"),
-                tags$td("0.1", style="padding:2px 6px;"),
-                tags$td("…", style="padding:2px 6px;")
+                tags$td("P003"),
+                tags$td("c.89_90insG"),
+                tags$td("0.1"),
+                tags$td("…")
               ),
               tags$tr(
-                tags$td("…", style="padding:2px 6px;"),
-                tags$td("…", style="padding:2px 6px;"),
-                tags$td("…", style="padding:2px 6px;"),
-                tags$td("…", style="padding:2px 6px;")
+                tags$td("…"),
+                tags$td("…"),
+                tags$td("…"),
+                tags$td("…")
               )
             )
           ),
@@ -1455,22 +1752,22 @@ server <- function(input, output, session) {
       easyClose = TRUE, size = "m",
       footer = modalButton("Close"),
       tags$div(
-        tags$h6("Table requirements", style = "margin-top:0; color:#dee2e6;"),
+        tags$h6("Table requirements", class = "modal-subheading"),
         tags$p(class = "muted", style = "font-size:0.9rem; margin-bottom:1rem;",
                "Your CSV must have at least two columns: ",
                tags$b("DNA_variant"), " (HGVS, e.g. c.123delA) and ",
                tags$b("patient_ID"), " as the individual identifier."),
-        tags$h6("Obtaining a FASTA", style = "color:#dee2e6;"),
+        tags$h6("Obtaining a FASTA", class = "modal-subheading"),
         tags$p(class = "muted", style = "font-size:0.9rem; margin-bottom:0.5rem;", "Example workflow:"),
         tags$ul(class = "muted", style = "font-size:0.9rem; margin-bottom:1rem; padding-left:1.2rem;",
                 tags$li("Find the gene on ensembl.org"),
                 tags$li("Click Download sequence"),
                 tags$li("Included sequences: all; Format: FASTA; Flanks: 0"),
                 tags$li("Download")),
-        tags$h6("FASTA with flanks (for TITER)", style = "color:#dee2e6;"),
+        tags$h6("FASTA with flanks (for TITER)", class = "modal-subheading"),
         tags$p(class = "muted", style = "font-size:0.9rem; margin-bottom:0.5rem;",
                "Same workflow as above, but set Flanks to 100 instead of 0."),
-        tags$h6("Why flanks for TITER?", style = "color:#dee2e6;"),
+        tags$h6("Why flanks for TITER?", class = "modal-subheading"),
         tags$p(class = "muted", style = "font-size:0.9rem; margin-bottom:0;",
                "TITER uses a 203 bp window around the central bases. A CDS file with ±100 bp flanks (5'/3' UTR) is needed to evaluate start sites near the 5' end.")
       )
@@ -1777,7 +2074,7 @@ Eine permanente inhaltliche Kontrolle der verlinkten Seiten ist jedoch ohne konk
         }) %>% dplyr::ungroup()
       } else df$`Lost Motifs` <- ""
       
-      # ----------------------- Non-canonical TIS via TITER -----------------------
+      # Non-canonical TIS via TITER
       if (isTRUE(input$use_titer)) {
         incProgress(0.05, detail = "Running non-canonical TIS analysis (TITER)")
         if (cancel_requested()) {
@@ -1901,8 +2198,6 @@ Eine permanente inhaltliche Kontrolle der verlinkten Seiten ist jedoch ohne konk
           }
         }
       }
-      # --------------------------------------------------------------------------
-
       incProgress(0.1, detail="Calculating frameshift metrics")
       if (cancel_requested()) {showNotification("Analysis cancelled.", type="warning"); shinyjs::disable("cancel"); result_data(NULL); return(NULL)}
       df <- df %>% dplyr::mutate(
