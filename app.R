@@ -221,7 +221,7 @@ ui <- tagList(
         --mfap-card-header-border: rgba(255,255,255,0.06);
         --mfap-action-dock-bg: rgba(32,35,38,0.35);
         --mfap-action-dock-border: rgba(255,255,255,0.12);
-        --mfap-action-dock-shadow: 0 6px 24px rgba(0,0,0,0.25);
+        --mfap-action-dock-shadow: 0 0 16px rgba(0,0,0,0.16);
         --mfap-details-bg: #262a2e;
         --mfap-details-bg-open: #2d3236;
         --mfap-details-border: rgba(255,255,255,0.08);
@@ -261,7 +261,7 @@ ui <- tagList(
         --mfap-card-header-border: rgba(17,24,39,0.08);
         --mfap-action-dock-bg: rgba(255,255,255,0.76);
         --mfap-action-dock-border: rgba(17,24,39,0.14);
-        --mfap-action-dock-shadow: 0 8px 24px rgba(15,23,42,0.10);
+        --mfap-action-dock-shadow: 0 0 16px rgba(15,23,42,0.07);
         --mfap-details-bg: #f8fafc;
         --mfap-details-bg-open: #f1f5f9;
         --mfap-details-border: rgba(17,24,39,0.12);
@@ -542,8 +542,6 @@ ui <- tagList(
       .site-footer{
   position: relative;
   z-index: 10;
-  background: var(--mfap-navbar-bg) !important;
-  border-top: 1px solid var(--mfap-navbar-border);
   color: var(--mfap-footer-color) !important;
 }
       
