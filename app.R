@@ -244,6 +244,17 @@ ui <- tagList(
         --mfap-intro-text: #e9ecef;
         --mfap-intro-hover-text: #ffffff;
         --bs-body-bg: #2b3138;
+        --mfap-form-bg: #25282c;
+        --mfap-form-border: rgba(255,255,255,0.14);
+        --mfap-form-color: #e9ecef;
+        --mfap-form-focus-border: rgba(255,255,255,0.25);
+        --mfap-btn-info-bg: var(--mfap-link);
+        --mfap-btn-info-hover: var(--mfap-link-hover);
+        --mfap-btn-info-active: var(--mfap-link-hover);
+        --mfap-btn-info-color: #fff;
+        --mfap-toast-message-bg: #2563eb;
+        --mfap-toast-message-border: #1d4ed8;
+        --mfap-toast-message-text: #ffffff;
       }
 
       html[data-mfap-theme='light']{
@@ -286,6 +297,13 @@ ui <- tagList(
         --bs-body-bg: #e1e7ef;
         --bs-body-color: #1f2937;
         --bs-border-color: #dbe2ea;
+        --mfap-btn-info-bg: #4dabf7;
+        --mfap-btn-info-hover: #74c0fc;
+        --mfap-btn-info-active: #74c0fc;
+        --mfap-btn-info-color: #fff;
+        --mfap-toast-message-bg: #2563eb;
+        --mfap-toast-message-border: #1d4ed8;
+        --mfap-toast-message-text: #ffffff;
       }
       
       #shiny-modal.mfap-intro-modal{
@@ -402,6 +420,28 @@ ui <- tagList(
       .card-body{padding:14px!important;}
       .card-footer{background:var(--mfap-card-bg);border-top:1px solid var(--mfap-card-header-border);padding:12px 14px;}
 
+      html:not([data-mfap-theme='light']) .form-control,
+      html:not([data-mfap-theme='light']) .shiny-input-container input[type='text'].form-control,
+      html:not([data-mfap-theme='light']) .shiny-input-container input[type='number'].form-control{
+        background-color:var(--mfap-form-bg) !important;
+        border-color:var(--mfap-form-border) !important;
+        color:var(--mfap-form-color) !important;
+      }
+      html:not([data-mfap-theme='light']) .form-control:focus{
+        background-color:var(--mfap-form-bg) !important;
+        border-color:var(--mfap-form-focus-border) !important;
+        color:var(--mfap-form-color) !important;
+        box-shadow:0 0 0 0.2rem rgba(255,255,255,0.08) !important;
+      }
+      html:not([data-mfap-theme='light']) .form-control::placeholder{
+        color:var(--mfap-muted) !important;
+      }
+      html:not([data-mfap-theme='light']) .input-group .form-control{
+        background-color:var(--mfap-form-bg) !important;
+        border-color:var(--mfap-form-border) !important;
+        color:var(--mfap-form-color) !important;
+      }
+
       .sidebar{position:sticky;top:16px;max-height:calc(100vh - 32px);overflow:auto;}
       .action-dock{
           position: sticky;
@@ -419,6 +459,70 @@ ui <- tagList(
         }
       .action-row{display:flex;gap:8px;}
       .action-dock .btn{width:100%;}
+      .btn-mfap-primary{background-color:#2563eb !important;border-color:#2563eb !important;color:#fff !important;}
+      .btn-mfap-primary:hover,.btn-mfap-primary:focus{background-color:#1d4ed8 !important;border-color:#1d4ed8 !important;color:#fff !important;}
+      #res_tbl .dataTables_wrapper .dataTables_paginate .paginate_button,
+      #res_tbl .dataTables_wrapper .dataTables_paginate .page-link,
+      #res_tbl .dataTables_wrapper .dataTables_paginate .paginate_button.btn,
+      #res_tbl .dataTables_wrapper .dataTables_paginate .paginate_button.btn-success{
+        background:#495057 !important;
+        border-color:#495057 !important;
+        color:#fff !important;
+        box-shadow:none !important;
+      }
+      #res_tbl .dataTables_wrapper .dataTables_paginate .paginate_button.current,
+      #res_tbl .dataTables_wrapper .dataTables_paginate .paginate_button.current.btn-success,
+      #res_tbl .dataTables_wrapper .dataTables_paginate .page-item.active .page-link{
+        background:#4dabf7 !important;
+        border-color:#4dabf7 !important;
+        color:#fff !important;
+        box-shadow:none !important;
+      }
+      #res_tbl .dataTables_wrapper .dataTables_paginate .paginate_button:hover:not(.disabled),
+      #res_tbl .dataTables_wrapper .dataTables_paginate .paginate_button:focus:not(.disabled),
+      #res_tbl .dataTables_wrapper .dataTables_paginate .page-item:not(.disabled):not(.active) .page-link:hover,
+      #res_tbl .dataTables_wrapper .dataTables_paginate .page-item:not(.disabled):not(.active) .page-link:focus{
+        background:#4dabf7 !important;
+        border-color:#4dabf7 !important;
+        color:#fff !important;
+      }
+      #res_tbl .dataTables_wrapper .dataTables_paginate .paginate_button.disabled,
+      #res_tbl .dataTables_wrapper .dataTables_paginate .page-item.disabled .page-link{
+        background:#343a40 !important;
+        border-color:#343a40 !important;
+        color:rgba(255,255,255,0.5) !important;
+        cursor:default !important;
+        opacity:1 !important;
+      }
+      html[data-mfap-theme='light'] #res_tbl .dataTables_wrapper .dataTables_paginate .paginate_button,
+      html[data-mfap-theme='light'] #res_tbl .dataTables_wrapper .dataTables_paginate .page-link,
+      html[data-mfap-theme='light'] #res_tbl .dataTables_wrapper .dataTables_paginate .paginate_button.btn,
+      html[data-mfap-theme='light'] #res_tbl .dataTables_wrapper .dataTables_paginate .paginate_button.btn-success{
+        background:#94a3b8 !important;
+        border-color:#94a3b8 !important;
+        color:#fff !important;
+      }
+      html[data-mfap-theme='light'] #res_tbl .dataTables_wrapper .dataTables_paginate .paginate_button.current,
+      html[data-mfap-theme='light'] #res_tbl .dataTables_wrapper .dataTables_paginate .paginate_button.current.btn-success,
+      html[data-mfap-theme='light'] #res_tbl .dataTables_wrapper .dataTables_paginate .page-item.active .page-link{
+        background:#2563eb !important;
+        border-color:#2563eb !important;
+        color:#fff !important;
+      }
+      html[data-mfap-theme='light'] #res_tbl .dataTables_wrapper .dataTables_paginate .paginate_button:hover:not(.disabled),
+      html[data-mfap-theme='light'] #res_tbl .dataTables_wrapper .dataTables_paginate .paginate_button:focus:not(.disabled),
+      html[data-mfap-theme='light'] #res_tbl .dataTables_wrapper .dataTables_paginate .page-item:not(.disabled):not(.active) .page-link:hover,
+      html[data-mfap-theme='light'] #res_tbl .dataTables_wrapper .dataTables_paginate .page-item:not(.disabled):not(.active) .page-link:focus{
+        background:#3b82f6 !important;
+        border-color:#3b82f6 !important;
+        color:#fff !important;
+      }
+      html[data-mfap-theme='light'] #res_tbl .dataTables_wrapper .dataTables_paginate .paginate_button.disabled,
+      html[data-mfap-theme='light'] #res_tbl .dataTables_wrapper .dataTables_paginate .page-item.disabled .page-link{
+        background:#cbd5e1 !important;
+        border-color:#cbd5e1 !important;
+        color:#64748b !important;
+      }
       
       /* Results DT: header-driven sizing + ellipsis truncation */
       #res_tbl table.dataTable{
@@ -652,32 +756,73 @@ button.intro-cta:active{
       html[data-mfap-theme='light'] .shiny-input-container .checkbox input[type='checkbox']{
         accent-color:#2563eb;
       }
-      html[data-mfap-theme='light'] .shiny-input-container .input-group-btn .btn,
-      html[data-mfap-theme='light'] .shiny-input-container .btn-file{
-        background-color:#616b77 !important;
-        border-color:#616b77 !important;
-        color:#ffffff !important;
+      .btn-info,
+      .shiny-input-container .input-group-btn .btn,
+      .shiny-input-container .btn-file,
+      .shiny-input-container label.btn-file{
+        background-color:var(--mfap-btn-info-bg) !important;
+        border-color:var(--mfap-btn-info-bg) !important;
+        color:var(--mfap-btn-info-color) !important;
       }
-      html[data-mfap-theme='light'] .shiny-input-container .input-group-btn .btn:hover,
-      html[data-mfap-theme='light'] .shiny-input-container .input-group-btn .btn:focus,
-      html[data-mfap-theme='light'] .shiny-input-container .btn-file:hover,
-      html[data-mfap-theme='light'] .shiny-input-container .btn-file:focus{
-        background-color:#54606d !important;
-        border-color:#54606d !important;
-        color:#ffffff !important;
+      .btn-info:hover,.btn-info:focus,
+      .shiny-input-container .input-group-btn .btn:hover,
+      .shiny-input-container .input-group-btn .btn:focus,
+      .shiny-input-container .btn-file:hover,
+      .shiny-input-container .btn-file:focus{
+        background-color:var(--mfap-btn-info-hover) !important;
+        border-color:var(--mfap-btn-info-hover) !important;
+        color:var(--mfap-btn-info-color) !important;
       }
-      html[data-mfap-theme='light'] .shiny-input-container .input-group-btn .btn:active,
-      html[data-mfap-theme='light'] .shiny-input-container .btn-file:active{
-        background-color:#4b5563 !important;
-        border-color:#4b5563 !important;
-        color:#ffffff !important;
+      .btn-info:active,
+      .shiny-input-container .input-group-btn .btn:active,
+      .shiny-input-container .btn-file:active{
+        background-color:var(--mfap-btn-info-active) !important;
+        border-color:var(--mfap-btn-info-active) !important;
+        color:var(--mfap-btn-info-color) !important;
+      }
+      .shiny-notification.shiny-notification-message{
+        background:var(--mfap-toast-message-bg) !important;
+        border:1px solid var(--mfap-toast-message-border) !important;
+        color:var(--mfap-toast-message-text) !important;
+      }
+      .shiny-notification.shiny-notification-message .shiny-notification-content,
+      .shiny-notification.shiny-notification-message .shiny-notification-close{
+        color:var(--mfap-toast-message-text) !important;
+      }
+      .shiny-notification.shiny-progress-notification,
+      .shiny-progress-container .shiny-notification,
+      .shiny-progress-container .shiny-notification.shiny-notification-closeable{
+        background-color:var(--mfap-toast-message-bg) !important;
+        background-image:none !important;
+        border:1px solid var(--mfap-toast-message-border) !important;
+        color:var(--mfap-toast-message-text) !important;
+        opacity:1 !important;
+        backdrop-filter:none !important;
+      }
+      .shiny-notification.shiny-progress-notification .shiny-notification-content,
+      .shiny-notification.shiny-progress-notification .shiny-notification-close{
+        color:var(--mfap-toast-message-text) !important;
+        opacity:1 !important;
+      }
+      .shiny-progress-container .progress-text .progress-message,
+      .shiny-progress-container .progress-text .progress-detail,
+      .shiny-progress-container .shiny-notification-close{
+        color:var(--mfap-toast-message-text) !important;
+      }
+      .shiny-notification.shiny-progress-notification .progress,
+      .shiny-progress-container .progress{
+        background:rgba(255,255,255,0.25) !important;
+      }
+      .shiny-notification.shiny-progress-notification .progress .progress-bar,
+      .shiny-progress-container .progress .progress-bar{
+        background:var(--mfap-link-hover) !important;
       }
       html[data-mfap-theme='light'] #clear_uploads,
       html[data-mfap-theme='light'] #clr_dom,
       html[data-mfap-theme='light'] #clr_mot,
       html[data-mfap-theme='light'] #clear_example_data{
-        background-color:#616b77 !important;
-        border-color:#616b77 !important;
+        background-color:#94a3b8 !important;
+        border-color:#94a3b8 !important;
         color:#ffffff !important;
       }
       html[data-mfap-theme='light'] #clear_uploads:hover,
@@ -688,16 +833,16 @@ button.intro-cta:active{
       html[data-mfap-theme='light'] #clr_mot:focus,
       html[data-mfap-theme='light'] #clear_example_data:hover,
       html[data-mfap-theme='light'] #clear_example_data:focus{
-        background-color:#54606d !important;
-        border-color:#54606d !important;
+        background-color:#64748b !important;
+        border-color:#64748b !important;
         color:#ffffff !important;
       }
       html[data-mfap-theme='light'] #clear_uploads:active,
       html[data-mfap-theme='light'] #clr_dom:active,
       html[data-mfap-theme='light'] #clr_mot:active,
       html[data-mfap-theme='light'] #clear_example_data:active{
-        background-color:#4b5563 !important;
-        border-color:#4b5563 !important;
+        background-color:#475569 !important;
+        border-color:#475569 !important;
         color:#ffffff !important;
       }
 
@@ -816,6 +961,69 @@ button.intro-cta:active{
         });
       });
     "))
+    ,
+    tags$script(HTML("
+      (function(){
+        function cssVar(name, fallback){
+          var v = getComputedStyle(document.documentElement).getPropertyValue(name);
+          return (v && v.trim()) ? v.trim() : fallback;
+        }
+        function styleProgressToast(node){
+          if (!node || !node.querySelector) return;
+          var isProgress = node.classList.contains('shiny-progress-notification') ||
+            !!node.querySelector('.progress') ||
+            !!node.querySelector('.progress-message') ||
+            /Running analysis/i.test(node.textContent || '');
+          if (!isProgress) return;
+
+          var bg = cssVar('--mfap-toast-message-bg', '#2563eb');
+          var border = cssVar('--mfap-toast-message-border', '#1d4ed8');
+          var text = cssVar('--mfap-toast-message-text', '#ffffff');
+          var bar = cssVar('--mfap-link-hover', '#74c0fc');
+
+          node.style.setProperty('background-color', bg, 'important');
+          node.style.setProperty('background-image', 'none', 'important');
+          node.style.setProperty('border-color', border, 'important');
+          node.style.setProperty('color', text, 'important');
+          node.style.setProperty('opacity', '1', 'important');
+          node.style.setProperty('backdrop-filter', 'none', 'important');
+
+          node.querySelectorAll('.shiny-notification-content, .shiny-notification-close, .progress-message, .progress-detail').forEach(function(el){
+            el.style.setProperty('color', text, 'important');
+            el.style.setProperty('opacity', '1', 'important');
+          });
+          node.querySelectorAll('.progress').forEach(function(el){
+            el.style.setProperty('background', 'rgba(255,255,255,0.25)', 'important');
+          });
+          node.querySelectorAll('.progress-bar').forEach(function(el){
+            el.style.setProperty('background', bar, 'important');
+          });
+        }
+
+        function scan(){
+          document.querySelectorAll('.shiny-notification, .shiny-progress-container .shiny-notification').forEach(styleProgressToast);
+        }
+
+        document.addEventListener('DOMContentLoaded', function(){
+          scan();
+          var observer = new MutationObserver(function(mutations){
+            mutations.forEach(function(m){
+              m.addedNodes.forEach(function(n){
+                if (!n || n.nodeType !== 1) return;
+                if (n.matches && (n.matches('.shiny-notification') || n.matches('.shiny-progress-container'))) {
+                  styleProgressToast(n);
+                }
+                if (n.querySelectorAll) {
+                  n.querySelectorAll('.shiny-notification, .shiny-progress-container .shiny-notification').forEach(styleProgressToast);
+                }
+              });
+            });
+            scan();
+          });
+          observer.observe(document.body, { childList: true, subtree: true });
+        });
+      })();
+    "))
     ),
     
     # Analysis tab
@@ -891,8 +1099,7 @@ button.intro-cta:active{
               ),
               div(class="action-dock",
                   div(class="action-row",
-                      actionButton("run", "Analyze", icon=icon("play"), class="btn btn-success"),
-                      actionButton("cancel", "Cancel", class="btn btn-danger")
+                      actionButton("run", "Analyze", icon=icon("play"), class="btn btn-mfap-primary")
                   )
               )
             ),
@@ -1313,10 +1520,6 @@ server <- function(input, output, session) {
   wt_aa_len <- reactiveVal(NULL)
   
   result_data <- reactiveVal(NULL)
-  cancel_requested <- reactiveVal(FALSE)
-  observeEvent(input$cancel, {
-    cancel_requested(TRUE); result_data(NULL)
-  })
   
   observe({
     has_csv   <- !is.null(input$csv)   || !is.null(example_csv())
@@ -1518,7 +1721,7 @@ server <- function(input, output, session) {
     fasta_ok(FALSE); fasta_msg("")
     flank_ok(FALSE); flank_msg("")
     result_data(NULL)
-    shinyjs::disable("run"); shinyjs::disable("cancel")
+    shinyjs::disable("run")
   })
   
   
@@ -1914,7 +2117,7 @@ Eine permanente inhaltliche Kontrolle der verlinkten Seiten ist jedoch ohne konk
   
   
   observeEvent(input$run, {
-    cancel_requested(FALSE); shinyjs::disable("run"); shinyjs::enable("cancel"); shinyjs::hide("res_tbl")
+    shinyjs::disable("run"); shinyjs::hide("res_tbl")
     req(!is.null(input$csv) || !is.null(example_csv()))
     vd <- if (!is.null(example_csv())) {
       example_csv()
@@ -1926,30 +2129,30 @@ Eine permanente inhaltliche Kontrolle der verlinkten Seiten ist jedoch ohne konk
     
     if (nrow(vd)==0) {
       showModal(modalDialog(title="Empty CSV","Your variant list file has zero rows.", easyClose=TRUE, footer=modalButton("OK")))
-      result_data(NULL); shinyjs::disable("cancel"); shinyjs::enable("run"); return(NULL)
+      result_data(NULL); shinyjs::enable("run"); return(NULL)
     }
     
     if (!all(c("patient_ID","DNA_variant") %in% colnames(vd))) {
       showModal(modalDialog(title="Missing column","Your CSV must contain columns `patient_ID` and `DNA_variant`.", easyClose=TRUE, footer=modalButton("OK")))
-      result_data(NULL); shinyjs::disable("cancel"); shinyjs::enable("run"); return(NULL)
+      result_data(NULL); shinyjs::enable("run"); return(NULL)
     }
     
     miss_pid <- sum(is.na(vd$patient_ID) | !nzchar(trimws(vd$patient_ID)))
     if (miss_pid > 0) {
       showModal(modalDialog(title="Missing values", paste0("patient_ID has ", miss_pid, " missing/empty values."), easyClose=TRUE, footer=modalButton("OK")))
-      result_data(NULL); shinyjs::disable("cancel"); shinyjs::enable("run"); return(NULL)
+      result_data(NULL); shinyjs::enable("run"); return(NULL)
     }
     
     miss_var <- sum(is.na(vd$DNA_variant) | !nzchar(trimws(vd$DNA_variant)))
     if (miss_var > 0) {
       showModal(modalDialog(title="Missing values", paste0("DNA_variant has ", miss_var, " missing/empty values."), easyClose=TRUE, footer=modalButton("OK")))
-      result_data(NULL); shinyjs::disable("cancel"); shinyjs::enable("run"); return(NULL)
+      result_data(NULL); shinyjs::enable("run"); return(NULL)
     }
     
     dup_pid <- sum(duplicated(vd$patient_ID))
     if (dup_pid > 0) {
       showModal(modalDialog(title="Duplicated IDs", paste0("patient_ID contains ", dup_pid, " duplicated value(s)."), easyClose=TRUE, footer=modalButton("OK")))
-      result_data(NULL); shinyjs::disable("cancel"); shinyjs::enable("run"); return(NULL)
+      result_data(NULL); shinyjs::enable("run"); return(NULL)
     }
     
     issues <- vapply(vd$DNA_variant, variant_issue, character(1))
@@ -1962,13 +2165,13 @@ Eine permanente inhaltliche Kontrolle der verlinkten Seiten ist jedoch ohne konk
         easyClose=TRUE,
         footer=modalButton("OK")
       ))
-      result_data(NULL); shinyjs::disable("cancel"); shinyjs::enable("run"); return(NULL)
+      result_data(NULL); shinyjs::enable("run"); return(NULL)
     }
     
     if (isTRUE(input$use_titer)) {
       if (is.null(input$fasta_flank) && is.null(example_fasta_flank_seq())) {
         showModal(modalDialog(title="Missing FASTA","Upload the FASTA with ±100 bp flanks for TITER.", easyClose=TRUE, footer=modalButton("OK")))
-        result_data(NULL); shinyjs::disable("cancel"); shinyjs::enable("run"); return(NULL)
+        result_data(NULL); shinyjs::enable("run"); return(NULL)
       }
     }
     
@@ -1978,7 +2181,7 @@ Eine permanente inhaltliche Kontrolle der verlinkten Seiten ist jedoch ohne konk
     seq_nt <- toupper(paste(lines[!startsWith(lines, ">")], collapse=""))
     if (nchar(seq_nt) %% 3 != 0) {
       showModal(modalDialog(title="Sequence not multiple of 3","Reference length is not divisible by 3.", easyClose=TRUE, footer=modalButton("OK")))
-      result_data(NULL); shinyjs::disable("cancel"); shinyjs::enable("run"); return(NULL)
+      result_data(NULL); shinyjs::enable("run"); return(NULL)
     }
     
     probs <- validate_variants_against_ref(vd$DNA_variant, seq_nt)
@@ -1994,7 +2197,7 @@ Eine permanente inhaltliche Kontrolle der verlinkten Seiten ist jedoch ohne konk
         tags$ul(lapply(ex, function(i) tags$li(paste0("Row ", i, " (", vd$DNA_variant[i], "): ", probs[i])))),
         if (length(bad_sem) > length(ex)) tags$p(class="muted", paste0("... and ", length(bad_sem) - length(ex), " more.")) else NULL
       ))
-      result_data(NULL); shinyjs::disable("cancel"); shinyjs::enable("run"); return(NULL)
+      result_data(NULL); shinyjs::enable("run"); return(NULL)
     }
     
     aa_len <- nchar(Biostrings::translate(Biostrings::DNAString(seq_nt), if.fuzzy.codon="X"))
@@ -2003,14 +2206,13 @@ Eine permanente inhaltliche Kontrolle der verlinkten Seiten ist jedoch ohne konk
     
     withProgress(message="Running analysis...", value=0, {
       incProgress(0.1, detail="Parsing mutations")
-      if (cancel_requested()) {showNotification("Analysis cancelled.", type="warning"); shinyjs::disable("cancel"); result_data(NULL); return(NULL)}
       parsed <- tryCatch(
         lapply(vd$DNA_variant, parse_mutation_strict, wildtype_seq = seq_nt),
         error = function(e) e
       )
       if (inherits(parsed, "error")) {
         showModal(modalDialog(title="Variant parsing failed", parsed$message, easyClose=TRUE, footer=modalButton("OK")))
-        result_data(NULL); shinyjs::disable("cancel"); shinyjs::enable("run"); return(NULL)
+        result_data(NULL); shinyjs::enable("run"); return(NULL)
       }
       
       df <- vd %>% dplyr::mutate(
@@ -2023,21 +2225,19 @@ Eine permanente inhaltliche Kontrolle der verlinkten Seiten ist jedoch ohne konk
       )
       
       incProgress(0.2, detail="Translating proteins")
-      if (cancel_requested()) {showNotification("Analysis cancelled.", type="warning"); shinyjs::disable("cancel"); result_data(NULL); return(NULL)}
       prot <- tryCatch(
         mapply(translate_prot_strict, df$Mutated_Sequence, df$DNA_variant, USE.NAMES = FALSE),
         error = function(e) e
       )
       if (inherits(prot, "error")) {
         showModal(modalDialog(title="Protein translation failed", prot$message, easyClose=TRUE, footer=modalButton("OK")))
-        result_data(NULL); shinyjs::disable("cancel"); shinyjs::enable("run"); return(NULL)
+        result_data(NULL); shinyjs::enable("run"); return(NULL)
       }
       df$Mutated_Protein <- prot
       df$Protein_Length_aa <- nchar(df$Mutated_Protein)
       
       
       incProgress(0.2, detail="Refining mutation types")
-      if (cancel_requested()) {showNotification("Analysis cancelled.", type="warning"); shinyjs::disable("cancel"); result_data(NULL); return(NULL)}
       df <- df %>% dplyr::rowwise() %>% dplyr::mutate(Mutation_Type = dplyr::case_when(
         Mutation_Type=="Point" ~ refine_point(Locus, Mutated_Sequence, seq_nt, GENETIC_CODE),
         Mutation_Type %in% c("Deletion","Duplication","Insertion","Indel") ~ refine_indel(Mutation_Type, Deleted_Bases, Duplicated_Bases, Inserted_Bases),
@@ -2045,7 +2245,6 @@ Eine permanente inhaltliche Kontrolle der verlinkten Seiten ist jedoch ohne konk
       )) %>% dplyr::ungroup()
       
       incProgress(0.2, detail="Annotating domains & motifs")
-      if (cancel_requested()) {showNotification("Analysis cancelled.", type="warning"); shinyjs::disable("cancel"); result_data(NULL); return(NULL)}
       doms <- domains(); mot <- motifs()
       df <- df %>% dplyr::mutate(
         AA_Position = floor((Locus - 1)/3) + 1,
@@ -2075,12 +2274,8 @@ Eine permanente inhaltliche Kontrolle der verlinkten Seiten ist jedoch ohne konk
       # Non-canonical TIS via TITER
       if (isTRUE(input$use_titer)) {
         incProgress(0.05, detail = "Running non-canonical TIS analysis (TITER)")
-        if (cancel_requested()) {
-          showNotification("Analysis cancelled.", type = "warning")
-          shinyjs::disable("cancel"); result_data(NULL); return(NULL)
-        }
-        
-        # Use the already-selected interpreter (RETICULATE_PYTHON) — do NOT switch envs here
+
+        # Use the configured RETICULATE_PYTHON interpreter and avoid switching environments here.
         
         # Resolve & copy bundled `titer/` to a writable temp workdir
         app_dir <- normalizePath(getwd(), winslash = "/", mustWork = TRUE)
@@ -2197,7 +2392,6 @@ Eine permanente inhaltliche Kontrolle der verlinkten Seiten ist jedoch ohne konk
         }
       }
       incProgress(0.1, detail="Calculating frameshift metrics")
-      if (cancel_requested()) {showNotification("Analysis cancelled.", type="warning"); shinyjs::disable("cancel"); result_data(NULL); return(NULL)}
       df <- df %>% dplyr::mutate(
         Unaltered_Length_aa  = dplyr::if_else(Mutation_Type=='Frameshifting indel', (floor((Locus-1)/3)+1)-1, NA_integer_),
         Frameshift_Length_aa = dplyr::if_else(Mutation_Type=='Frameshifting indel', Protein_Length_aa - ((floor((Locus-1)/3)+1)-1), NA_integer_)
@@ -2205,7 +2399,7 @@ Eine permanente inhaltliche Kontrolle der verlinkten Seiten ist jedoch ohne konk
       
       colnames(df) <- gsub("_"," ", colnames(df))
       df <- df %>% dplyr::select(-c(`Mutated Sequence`,`Mutated Protein`), dplyr::everything(), `Mutated Sequence`,`Mutated Protein`)
-      result_data(df); shinyjs::disable("cancel"); shinyjs::enable("run")
+      result_data(df); shinyjs::enable("run")
     })
   })
   
@@ -2220,17 +2414,128 @@ Eine permanente inhaltliche Kontrolle der verlinkten Seiten ist jedoch ohne konk
       options  = list(
         pageLength = 10,
         scrollX    = TRUE,
-        
-        autoWidth  = TRUE,     # allow natural sizing
+        autoWidth  = TRUE,
         dom        = "tip",
-        
-        # add title tooltips to every cell on every draw
         createdRow = JS("
         function(row, data, dataIndex){
           $('td', row).each(function(i){
             var txt = $(this).text();
             $(this).attr('title', txt);
           });
+        }
+      "),
+        initComplete = JS("
+        function(){
+          var api = this;
+          var wrapper = $(api.table().container());
+          var applyPaginateStyle = function(){
+            if (!wrapper.length) return;
+            var isLight = document.documentElement.getAttribute('data-mfap-theme') === 'light';
+            var gray = isLight ? '#94a3b8' : '#495057';
+            var blue = isLight ? '#2563eb' : '#4dabf7';
+            var grayDisabled = isLight ? '#cbd5e1' : '#343a40';
+            var grayColor = isLight ? '#64748b' : 'rgba(255,255,255,0.5)';
+            var styleId = 'mfap-dt-pagination-style';
+            var styleEl = document.getElementById(styleId);
+            if (!styleEl) {
+              styleEl = document.createElement('style');
+              styleEl.id = styleId;
+              document.head.appendChild(styleEl);
+            }
+            var sel = '#res_tbl .dataTables_wrapper .dataTables_paginate .paginate_button';
+            styleEl.textContent = sel + '{ background:' + gray + ' !important; border-color:' + gray + ' !important; color:#fff !important; }' +
+              sel + '.current{ background:' + blue + ' !important; border-color:' + blue + ' !important; color:#fff !important; }' +
+              sel + ':hover:not(.disabled){ background:' + blue + ' !important; border-color:' + blue + ' !important; color:#fff !important; }' +
+              sel + '.disabled{ background:' + grayDisabled + ' !important; border-color:' + grayDisabled + ' !important; color:' + grayColor + ' !important; }';
+            wrapper.find('.dataTables_paginate .paginate_button').each(function(){
+              var el = $(this);
+              var e = el[0];
+              e.classList.remove('btn-success');
+              if (el.hasClass('disabled')) {
+                e.style.setProperty('background-color', grayDisabled, 'important');
+                e.style.setProperty('border-color', grayDisabled, 'important');
+                e.style.setProperty('color', grayColor, 'important');
+              } else if (el.hasClass('current')) {
+                e.style.setProperty('background-color', blue, 'important');
+                e.style.setProperty('border-color', blue, 'important');
+                e.style.setProperty('color', '#fff', 'important');
+              } else {
+                e.style.setProperty('background-color', gray, 'important');
+                e.style.setProperty('border-color', gray, 'important');
+                e.style.setProperty('color', '#fff', 'important');
+              }
+            });
+            wrapper.find('.dataTables_paginate .paginate_button:not(.disabled)').off('mouseenter mouseleave').on('mouseenter', function(){
+              this.style.setProperty('background-color', blue, 'important');
+              this.style.setProperty('border-color', blue, 'important');
+              this.style.setProperty('color', '#fff', 'important');
+            }).on('mouseleave', function(){
+              if (!$(this).hasClass('current')) {
+                this.style.setProperty('background-color', gray, 'important');
+                this.style.setProperty('border-color', gray, 'important');
+                this.style.setProperty('color', '#fff', 'important');
+              }
+            });
+          };
+          applyPaginateStyle();
+          setTimeout(applyPaginateStyle, 200);
+        }
+      "),
+        drawCallback = JS("
+        function(){
+          var api = this;
+          var wrapper = $(api.table().container());
+          var applyPaginateStyle = function(){
+            if (!wrapper.length) return;
+            var isLight = document.documentElement.getAttribute('data-mfap-theme') === 'light';
+            var gray = isLight ? '#94a3b8' : '#495057';
+            var blue = isLight ? '#2563eb' : '#4dabf7';
+            var grayDisabled = isLight ? '#cbd5e1' : '#343a40';
+            var grayColor = isLight ? '#64748b' : 'rgba(255,255,255,0.5)';
+            var styleId = 'mfap-dt-pagination-style';
+            var styleEl = document.getElementById(styleId);
+            if (!styleEl) {
+              styleEl = document.createElement('style');
+              styleEl.id = styleId;
+              document.head.appendChild(styleEl);
+            }
+            var sel = '#res_tbl .dataTables_wrapper .dataTables_paginate .paginate_button';
+            styleEl.textContent = sel + '{ background:' + gray + ' !important; border-color:' + gray + ' !important; color:#fff !important; }' +
+              sel + '.current{ background:' + blue + ' !important; border-color:' + blue + ' !important; color:#fff !important; }' +
+              sel + ':hover:not(.disabled){ background:' + blue + ' !important; border-color:' + blue + ' !important; color:#fff !important; }' +
+              sel + '.disabled{ background:' + grayDisabled + ' !important; border-color:' + grayDisabled + ' !important; color:' + grayColor + ' !important; }';
+            wrapper.find('.dataTables_paginate .paginate_button').each(function(){
+              var el = $(this);
+              var e = el[0];
+              e.classList.remove('btn-success');
+              if (el.hasClass('disabled')) {
+                e.style.setProperty('background-color', grayDisabled, 'important');
+                e.style.setProperty('border-color', grayDisabled, 'important');
+                e.style.setProperty('color', grayColor, 'important');
+              } else if (el.hasClass('current')) {
+                e.style.setProperty('background-color', blue, 'important');
+                e.style.setProperty('border-color', blue, 'important');
+                e.style.setProperty('color', '#fff', 'important');
+              } else {
+                e.style.setProperty('background-color', gray, 'important');
+                e.style.setProperty('border-color', gray, 'important');
+                e.style.setProperty('color', '#fff', 'important');
+              }
+            });
+            wrapper.find('.dataTables_paginate .paginate_button:not(.disabled)').off('mouseenter mouseleave').on('mouseenter', function(){
+              this.style.setProperty('background-color', blue, 'important');
+              this.style.setProperty('border-color', blue, 'important');
+              this.style.setProperty('color', '#fff', 'important');
+            }).on('mouseleave', function(){
+              if (!$(this).hasClass('current')) {
+                this.style.setProperty('background-color', gray, 'important');
+                this.style.setProperty('border-color', gray, 'important');
+                this.style.setProperty('color', '#fff', 'important');
+              }
+            });
+          };
+          applyPaginateStyle();
+          setTimeout(applyPaginateStyle, 150);
         }
       ")
       )
@@ -2251,7 +2556,7 @@ Eine permanente inhaltliche Kontrolle der verlinkten Seiten ist jedoch ohne konk
     tags$div(
       style = "display:flex; align-items:center; justify-content:space-between; gap:10px; width:100%;",
       tags$span("Results"),
-      if (has_res) downloadButton("dl", "Download CSV", class = "btn btn-success btn-sm") else NULL
+      if (has_res) downloadButton("dl", "Download CSV", class = "btn btn-mfap-primary btn-sm") else NULL
     )
   })
   
