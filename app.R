@@ -6,27 +6,64 @@ library(dplyr)
 library(Biostrings)
 library(bslib)
 
-# Python venv setup
-venv_name   <- "r-reticulate"
-venv_path   <- file.path("~", ".virtualenvs", venv_name)
-# On macOS, python3 may be /opt/homebrew/bin/python3 or /usr/local/bin/python3 if /usr/bin/python3 is missing
-system_python <- "/usr/bin/python3"
-if (!dir.exists(venv_path)) {
-  message("Creating Python venv at ", venv_path)
-  reticulate::virtualenv_create(envname = venv_name, python = system_python)
-  reticulate::virtualenv_install(
-    envname  = venv_name,
-    packages = c("pip","wheel","setuptools","numpy","biopython","tensorflow"),
-    ignore_installed = FALSE
-  )
-}
-venv_python <- file.path(venv_path, "bin", "python")
-Sys.setenv(RETICULATE_PYTHON = venv_python)
-message("RETICULATE_PYTHON set to ", Sys.getenv("RETICULATE_PYTHON"))
-library(reticulate)
+titer_python_modules <- c("numpy", "tensorflow", "Bio")
+titer_summary_columns <- c(
+  "patient_ID",
+  "Most_likely_non_canonical_TIS_CDS_Position",
+  "RNA_sequence_most_likely_non_canonical_TIS",
+  "Most_likely_non_canonical_in_frame_TIS_CDS_Position",
+  "RNA_sequence_most_likely_non_canonical_in_frame_TIS"
+)
+titer_character_columns <- c(
+  "Most_likely_non_canonical_TIS_CDS_Position",
+  "RNA_sequence_most_likely_non_canonical_TIS",
+  "Most_likely_non_canonical_in_frame_TIS_CDS_Position",
+  "RNA_sequence_most_likely_non_canonical_in_frame_TIS",
+  "Protein_from_most_likely_non_canonical_TIS",
+  "Protein_from_most_likely_non_canonical_in_frame_TIS"
+)
+titer_integer_columns <- c(
+  "Protein_Length_from_most_likely_non_canonical_TIS",
+  "Protein_Length_from_most_likely_non_canonical_in_frame_TIS",
+  "Unaltered_Length_from_most_likely_non_canonical_TIS",
+  "Frameshift_Length_from_most_likely_non_canonical_TIS",
+  "Unaltered_Length_from_most_likely_non_canonical_in_frame_TIS",
+  "Frameshift_Length_from_most_likely_non_canonical_in_frame_TIS"
+)
 
-use_python(venv_python, required = TRUE)
-py_available(initialize = TRUE)
+ensure_titer_python_ready <- function(required_modules = titer_python_modules) {
+  py_ready <- tryCatch(
+    reticulate::py_available(initialize = TRUE),
+    error = function(e) FALSE
+  )
+  if (!isTRUE(py_ready)) {
+    return(list(ok = FALSE, message = "Python not available for TITER in this session."))
+  }
+
+  missing <- required_modules[!vapply(required_modules, reticulate::py_module_available, logical(1))]
+  if (length(missing) > 0) {
+    return(list(
+      ok = FALSE,
+      message = paste0(
+        "Missing Python modules for TITER: ",
+        paste(missing, collapse = ", "),
+        ". Ensure deployment installs dependencies from requirements.txt."
+      )
+    ))
+  }
+
+  list(ok = TRUE, message = NULL)
+}
+
+add_missing_titer_columns <- function(df) {
+  for (nm in titer_character_columns) {
+    if (!nm %in% names(df)) df[[nm]] <- NA_character_
+  }
+  for (nm in titer_integer_columns) {
+    if (!nm %in% names(df)) df[[nm]] <- NA_integer_
+  }
+  df
+}
 
 # parse_mutation
 parse_mutation <- function(mutation, wildtype_seq) {
@@ -2365,120 +2402,125 @@ Eine permanente inhaltliche Kontrolle der verlinkten Seiten ist jedoch ohne konk
       # Non-canonical TIS via TITER
       if (isTRUE(input$use_titer)) {
         incProgress(0.05, detail = "Running non-canonical TIS analysis (TITER)")
-
-        # Use the configured RETICULATE_PYTHON interpreter and avoid switching environments here.
-        
-        # Resolve & copy bundled `titer/` to a writable temp workdir
-        app_dir <- normalizePath(getwd(), winslash = "/", mustWork = TRUE)
-        titer_src <- normalizePath(file.path(app_dir, "titer"), winslash = "/", mustWork = FALSE)
-        if (!dir.exists(titer_src)) {
-          stop("The 'titer' folder is missing from the deployed bundle. ",
-               "Ensure it sits next to app.R and is NOT ignored by .gitignore/.Rbuildignore.")
-        }
-        temp_titer_dir <- file.path(tempdir(), "titer")
-        if (dir.exists(temp_titer_dir)) unlink(temp_titer_dir, recursive = TRUE)
-        dir.create(temp_titer_dir, recursive = TRUE, showWarnings = FALSE)
-        ok <- file.copy(list.files(titer_src, full.names = TRUE, all.files = TRUE, no.. = TRUE),
-                        temp_titer_dir, recursive = TRUE)
-        if (!all(ok)) stop("Failed to copy TITER files into tempdir().")
-        
-        # Ensure data dir exists
-        dir.create(file.path(temp_titer_dir, "data"), recursive = TRUE, showWarnings = FALSE)
-        
-        # Put the flanked FASTA into data/
-        if (!is.null(input$fasta_flank)) {
-          file.copy(input$fasta_flank$datapath,
-                    file.path(temp_titer_dir, "data", basename(input$fasta_flank$name)),
-                    overwrite = TRUE)
-        } else {
-          file.copy("www/example_reference_flank.fasta",
-                    file.path(temp_titer_dir, "data", "example_reference_flank.fasta"),
-                    overwrite = TRUE)
-        }
-        
-        # Write the CSV TITER expects
-        write.csv(df %>% dplyr::select(patient_ID, Mutated_Sequence, DNA_variant),
-                  file.path(temp_titer_dir, "data", "variant_list_with_mutated_sequences.csv"),
-                  row.names = FALSE)
-        
-        # Run Python
-        script_path <- file.path(temp_titer_dir, "codes", "analyze_patients_for_variant_specific_additional_TIS.py")
-        if (!reticulate::py_available(initialize = TRUE)) {
-          showNotification("Python not available; skipping TITER analysis.", type = "error")
+        titer_status <- ensure_titer_python_ready()
+        if (!isTRUE(titer_status$ok)) {
+          showNotification(
+            paste0(titer_status$message, " Skipping TITER analysis; TITER columns are set to NA."),
+            type = "warning",
+            duration = 12
+          )
+          df <- add_missing_titer_columns(df)
         } else {
           titer_ok <- tryCatch({
-            # Optional sanity check for required modules (helpful on Connect)
-            needed <- c("numpy", "tensorflow", "Bio")
-            missing <- needed[!vapply(needed, reticulate::py_module_available, logical(1))]
-            if (length(missing)) {
-              stop("Missing Python modules for TITER: ", paste(missing, collapse = ", "),
-                   ". Make sure your startup venv install step ran on Connect.")
+            # Resolve & copy bundled `titer/` to a writable temp workdir
+            app_dir <- normalizePath(getwd(), winslash = "/", mustWork = TRUE)
+            titer_src <- normalizePath(file.path(app_dir, "titer"), winslash = "/", mustWork = FALSE)
+            if (!dir.exists(titer_src)) {
+              stop("The 'titer' folder is missing from the deployed bundle. ",
+                   "Ensure it sits next to app.R and is NOT ignored by .gitignore/.Rbuildignore.")
             }
+            temp_titer_dir <- file.path(tempdir(), "titer")
+            if (dir.exists(temp_titer_dir)) unlink(temp_titer_dir, recursive = TRUE)
+            dir.create(temp_titer_dir, recursive = TRUE, showWarnings = FALSE)
+            ok <- file.copy(list.files(titer_src, full.names = TRUE, all.files = TRUE, no.. = TRUE),
+                            temp_titer_dir, recursive = TRUE)
+            if (!all(ok)) stop("Failed to copy TITER files into tempdir().")
+
+            # Ensure data dir exists
+            dir.create(file.path(temp_titer_dir, "data"), recursive = TRUE, showWarnings = FALSE)
+
+            # Put the flanked FASTA into data/
+            if (!is.null(input$fasta_flank)) {
+              file.copy(input$fasta_flank$datapath,
+                        file.path(temp_titer_dir, "data", basename(input$fasta_flank$name)),
+                        overwrite = TRUE)
+            } else {
+              file.copy("www/example_reference_flank.fasta",
+                        file.path(temp_titer_dir, "data", "example_reference_flank.fasta"),
+                        overwrite = TRUE)
+            }
+
+            # Write the CSV TITER expects
+            write.csv(df %>% dplyr::select(patient_ID, Mutated_Sequence, DNA_variant),
+                      file.path(temp_titer_dir, "data", "variant_list_with_mutated_sequences.csv"),
+                      row.names = FALSE)
+
+            # Run Python
+            script_path <- file.path(temp_titer_dir, "codes", "analyze_patients_for_variant_specific_additional_TIS.py")
             reticulate::source_python(script_path)
             summary_path <- file.path(temp_titer_dir, "data", "summary_patients_most_likely_additional_TIS.csv")
             if (!file.exists(summary_path))
               stop("TITER did not produce summary file. Check that the Python script completed successfully.")
-            list(summary = read.csv(summary_path, stringsAsFactors = FALSE))
+            titer_summary <- read.csv(summary_path, stringsAsFactors = FALSE)
+            missing_summary <- setdiff(titer_summary_columns, names(titer_summary))
+            if (length(missing_summary) > 0) {
+              stop("TITER output is missing required columns: ", paste(missing_summary, collapse = ", "))
+            }
+            list(summary = titer_summary)
           }, error = function(e) {
             showNotification(
-              paste0("TITER analysis failed; results will not include non-canonical TIS columns. ", conditionMessage(e)),
+              paste0("TITER analysis failed; TITER columns are set to NA. ", conditionMessage(e)),
               type = "warning",
               duration = 12
             )
             NULL
           })
+
           if (!is.null(titer_ok)) {
             titer_summary <- titer_ok$summary %>% dplyr::select(-dplyr::any_of("DNA_variant"))
             df <- dplyr::left_join(df, titer_summary, by = "patient_ID") %>%
-            dplyr::mutate(
-              Protein_from_most_likely_non_canonical_TIS          = sapply(RNA_sequence_most_likely_non_canonical_TIS, translate_prot),
-              Protein_from_most_likely_non_canonical_in_frame_TIS = sapply(RNA_sequence_most_likely_non_canonical_in_frame_TIS, translate_prot),
-              Protein_Length_from_most_likely_non_canonical_TIS          = nchar(Protein_from_most_likely_non_canonical_TIS),
-              Protein_Length_from_most_likely_non_canonical_in_frame_TIS = nchar(Protein_from_most_likely_non_canonical_in_frame_TIS)
-            ) %>% {
-              df_inner <- .
-              df_inner <- df_inner %>% dplyr::mutate(
-                Mutation_AA_Pos_Canonical = floor((Locus - 1) / 3) + 1,
-                Main_TIS_bp    = as.numeric(Most_likely_non_canonical_TIS_CDS_Position),
-                Main_TIS_Codon = floor((Main_TIS_bp - 1) / 3) + 1,
-                Mutation_AA_Pos_Main_TIS = dplyr::if_else(
-                  Mutation_Type == "Frameshifting indel" & Mutation_AA_Pos_Canonical >= Main_TIS_Codon,
-                  Mutation_AA_Pos_Canonical - (Main_TIS_Codon - 1), NA_integer_),
-                Unaltered_Raw_Main  = Mutation_AA_Pos_Main_TIS - 1,
-                Frameshift_Raw_Main = Protein_Length_from_most_likely_non_canonical_TIS - Unaltered_Raw_Main,
-                Unaltered_Length_from_most_likely_non_canonical_TIS = dplyr::if_else(
-                  Mutation_Type == "Frameshifting indel" &
-                    !is.na(Unaltered_Raw_Main) & Unaltered_Raw_Main >= 0 &
-                    Unaltered_Raw_Main <= Protein_Length_from_most_likely_non_canonical_TIS,
-                  Unaltered_Raw_Main, NA_integer_),
-                Frameshift_Length_from_most_likely_non_canonical_TIS = dplyr::if_else(
-                  Mutation_Type == "Frameshifting indel" &
-                    !is.na(Frameshift_Raw_Main) & Frameshift_Raw_Main >= 0,
-                  Frameshift_Raw_Main, NA_integer_),
-                InFrame_TIS_bp    = as.numeric(Most_likely_non_canonical_in_frame_TIS_CDS_Position),
-                InFrame_TIS_Codon = floor((InFrame_TIS_bp - 1) / 3) + 1,
-                Mutation_AA_Pos_Alternative = dplyr::if_else(
-                  Mutation_Type == "Frameshifting indel" & Mutation_AA_Pos_Canonical >= InFrame_TIS_Codon,
-                  Mutation_AA_Pos_Canonical - (InFrame_TIS_Codon - 1), NA_integer_),
-                Unaltered_Raw_InFrame  = Mutation_AA_Pos_Alternative - 1,
-                Frameshift_Raw_InFrame = Protein_Length_from_most_likely_non_canonical_in_frame_TIS - Unaltered_Raw_InFrame,
-                Unaltered_Length_from_most_likely_non_canonical_in_frame_TIS = dplyr::if_else(
-                  Mutation_Type == "Frameshifting indel" &
-                    !is.na(Unaltered_Raw_InFrame) & Unaltered_Raw_InFrame >= 0 &
-                    Unaltered_Raw_InFrame <= Protein_Length_from_most_likely_non_canonical_in_frame_TIS,
-                  Unaltered_Raw_InFrame, NA_integer_),
-                Frameshift_Length_from_most_likely_non_canonical_in_frame_TIS = dplyr::if_else(
-                  Mutation_Type == "Frameshifting indel" &
-                    !is.na(Frameshift_Raw_InFrame) & Frameshift_Raw_InFrame >= 0,
-                  Frameshift_Raw_InFrame, NA_integer_)
-              ) %>% dplyr::select(
-                -Mutation_AA_Pos_Canonical, -Main_TIS_bp, -Main_TIS_Codon,
-                -Mutation_AA_Pos_Main_TIS, -Unaltered_Raw_Main, -Frameshift_Raw_Main,
-                -InFrame_TIS_bp, -InFrame_TIS_Codon, -Mutation_AA_Pos_Alternative,
-                -Unaltered_Raw_InFrame, -Frameshift_Raw_InFrame
-              )
-              df_inner
-            }
+              dplyr::mutate(
+                Protein_from_most_likely_non_canonical_TIS          = sapply(RNA_sequence_most_likely_non_canonical_TIS, translate_prot),
+                Protein_from_most_likely_non_canonical_in_frame_TIS = sapply(RNA_sequence_most_likely_non_canonical_in_frame_TIS, translate_prot),
+                Protein_Length_from_most_likely_non_canonical_TIS          = nchar(Protein_from_most_likely_non_canonical_TIS),
+                Protein_Length_from_most_likely_non_canonical_in_frame_TIS = nchar(Protein_from_most_likely_non_canonical_in_frame_TIS)
+              ) %>% {
+                df_inner <- .
+                df_inner <- df_inner %>% dplyr::mutate(
+                  Mutation_AA_Pos_Canonical = floor((Locus - 1) / 3) + 1,
+                  Main_TIS_bp    = as.numeric(Most_likely_non_canonical_TIS_CDS_Position),
+                  Main_TIS_Codon = floor((Main_TIS_bp - 1) / 3) + 1,
+                  Mutation_AA_Pos_Main_TIS = dplyr::if_else(
+                    Mutation_Type == "Frameshifting indel" & Mutation_AA_Pos_Canonical >= Main_TIS_Codon,
+                    Mutation_AA_Pos_Canonical - (Main_TIS_Codon - 1), NA_integer_),
+                  Unaltered_Raw_Main  = Mutation_AA_Pos_Main_TIS - 1,
+                  Frameshift_Raw_Main = Protein_Length_from_most_likely_non_canonical_TIS - Unaltered_Raw_Main,
+                  Unaltered_Length_from_most_likely_non_canonical_TIS = dplyr::if_else(
+                    Mutation_Type == "Frameshifting indel" &
+                      !is.na(Unaltered_Raw_Main) & Unaltered_Raw_Main >= 0 &
+                      Unaltered_Raw_Main <= Protein_Length_from_most_likely_non_canonical_TIS,
+                    Unaltered_Raw_Main, NA_integer_),
+                  Frameshift_Length_from_most_likely_non_canonical_TIS = dplyr::if_else(
+                    Mutation_Type == "Frameshifting indel" &
+                      !is.na(Frameshift_Raw_Main) & Frameshift_Raw_Main >= 0,
+                    Frameshift_Raw_Main, NA_integer_),
+                  InFrame_TIS_bp    = as.numeric(Most_likely_non_canonical_in_frame_TIS_CDS_Position),
+                  InFrame_TIS_Codon = floor((InFrame_TIS_bp - 1) / 3) + 1,
+                  Mutation_AA_Pos_Alternative = dplyr::if_else(
+                    Mutation_Type == "Frameshifting indel" & Mutation_AA_Pos_Canonical >= InFrame_TIS_Codon,
+                    Mutation_AA_Pos_Canonical - (InFrame_TIS_Codon - 1), NA_integer_),
+                  Unaltered_Raw_InFrame  = Mutation_AA_Pos_Alternative - 1,
+                  Frameshift_Raw_InFrame = Protein_Length_from_most_likely_non_canonical_in_frame_TIS - Unaltered_Raw_InFrame,
+                  Unaltered_Length_from_most_likely_non_canonical_in_frame_TIS = dplyr::if_else(
+                    Mutation_Type == "Frameshifting indel" &
+                      !is.na(Unaltered_Raw_InFrame) & Unaltered_Raw_InFrame >= 0 &
+                      Unaltered_Raw_InFrame <= Protein_Length_from_most_likely_non_canonical_in_frame_TIS,
+                    Unaltered_Raw_InFrame, NA_integer_),
+                  Frameshift_Length_from_most_likely_non_canonical_in_frame_TIS = dplyr::if_else(
+                    Mutation_Type == "Frameshifting indel" &
+                      !is.na(Frameshift_Raw_InFrame) & Frameshift_Raw_InFrame >= 0,
+                    Frameshift_Raw_InFrame, NA_integer_)
+                ) %>% dplyr::select(
+                  -Mutation_AA_Pos_Canonical, -Main_TIS_bp, -Main_TIS_Codon,
+                  -Mutation_AA_Pos_Main_TIS, -Unaltered_Raw_Main, -Frameshift_Raw_Main,
+                  -InFrame_TIS_bp, -InFrame_TIS_Codon, -Mutation_AA_Pos_Alternative,
+                  -Unaltered_Raw_InFrame, -Frameshift_Raw_InFrame
+                )
+                df_inner
+              }
+            df <- add_missing_titer_columns(df)
+          } else {
+            df <- add_missing_titer_columns(df)
           }
         }
       }
