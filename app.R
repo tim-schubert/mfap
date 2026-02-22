@@ -2401,14 +2401,7 @@ Eine permanente inhaltliche Kontrolle der verlinkten Seiten ist jedoch ohne konk
       
       # Non-canonical TIS via TITER
       if (isTRUE(input$use_titer)) {
-        incProgress(0.05, detail = "Running non-canonical TIS analysis (TITER)")
-        titer_loading_note <- showNotification(
-          "Initializing TITER. This can take a moment, especially on first run.",
-          type = "message",
-          duration = NULL,
-          closeButton = FALSE
-        )
-        on.exit(removeNotification(titer_loading_note), add = TRUE)
+        incProgress(0.03, detail = "Initializing TITER")
         titer_status <- ensure_titer_python_ready()
         if (!isTRUE(titer_status$ok)) {
           showNotification(
@@ -2453,6 +2446,7 @@ Eine permanente inhaltliche Kontrolle der verlinkten Seiten ist jedoch ohne konk
                       row.names = FALSE)
 
             # Run Python
+            incProgress(0.02, detail = "Predicting translation initiation sites")
             script_path <- file.path(temp_titer_dir, "codes", "analyze_patients_for_variant_specific_additional_TIS.py")
             reticulate::source_python(script_path)
             summary_path <- file.path(temp_titer_dir, "data", "summary_patients_most_likely_additional_TIS.csv")
