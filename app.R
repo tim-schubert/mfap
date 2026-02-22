@@ -2245,7 +2245,7 @@ Eine permanente inhaltliche Kontrolle der verlinkten Seiten ist jedoch ohne konk
   
   
   observeEvent(input$run, {
-    shinyjs::disable("run"); shinyjs::hide("res_tbl")
+    shinyjs::disable("run")
     req(!is.null(input$csv) || !is.null(example_csv()))
     vd <- if (!is.null(example_csv())) {
       example_csv()
