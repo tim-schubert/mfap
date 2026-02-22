@@ -27,14 +27,34 @@ Assumptions:
 import os
 import sys
 import csv
+import warnings
 import numpy as np
 from Bio import SeqIO
+
+# Reduce TensorFlow C++ startup noise while keeping warnings/errors.
+os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")
 
 import tensorflow as tf
 from tensorflow.keras.optimizers import Nadam
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Dropout, Activation, Flatten, Conv1D, MaxPooling1D, LSTM
 from tensorflow.keras.constraints import MaxNorm
+from tensorflow.keras import Input
+
+VERBOSE_LOGS = os.getenv("TITER_VERBOSE", "0").lower() in ("1", "true", "yes", "on")
+
+
+def log_info(message, force=False):
+    if force or VERBOSE_LOGS:
+        print(message, flush=True)
+
+
+# Suppress one known, non-actionable warning from current TF/Keras stack.
+warnings.filterwarnings(
+    "ignore",
+    message=r".*Do not pass an `input_shape`/`input_dim` argument to a layer.*",
+    category=UserWarning
+)
 
 # ----------------------------------------------------------------------
 # Set up directories relative to this script file.
@@ -59,7 +79,10 @@ ref_seq = str(ref_record.seq).upper()
 # Assume first 100 bp and last 100 bp of this sequence are the UTRs
 utr5 = ref_seq[:100]
 utr3 = ref_seq[-100:]
-print(f"Loaded reference transcript '{flank_files[0]}' (length {len(ref_seq)} bp) and extracted 5' and 3' UTRs.")
+log_info(
+    f"Loaded reference transcript '{flank_files[0]}' (length {len(ref_seq)} bp) and extracted 5' and 3' UTRs.",
+    force=True
+)
 
 # ----------------------------------------------------------------------
 # Define candidate codons and window parameters.
@@ -114,10 +137,10 @@ def seq_matrix(seq_list):
 def build_model():
     """Build and return the TITER model architecture."""
     model = Sequential()
+    model.add(Input(shape=(WINDOW_LENGTH, 8)))
     model.add(Conv1D(
         filters=128,
         kernel_size=3,
-        input_shape=(WINDOW_LENGTH, 8),
         padding='valid',
         kernel_constraint=MaxNorm(3),
         activation='relu',
@@ -153,14 +176,14 @@ for idx, row in enumerate(variant_rows):
     patient_id = row.get("patient_ID", f"patient_{idx+1}").strip()
     dna_variant = row.get("DNA_variant", "").strip()
     mutated_sequence = row["Mutated_Sequence"].strip().upper()
-    print(f"\nProcessing patient {patient_id} with mutated CDS of length {len(mutated_sequence)} bp.")
+    log_info(f"Processing patient {patient_id} with mutated CDS length {len(mutated_sequence)} bp.")
     
     full_patient_seq = utr5 + mutated_sequence + utr3
     cds_start = 100
     cds_end = 100 + len(mutated_sequence)
     
     candidate_windows_patient = extract_candidate_windows(full_patient_seq)
-    print(f"  Found {len(candidate_windows_patient)} candidate windows for patient {patient_id}.")
+    log_info(f"Found {len(candidate_windows_patient)} candidate windows for patient {patient_id}.")
     
     patient_folder = os.path.join(INDIVIDUAL_FOLDER, patient_id)
     if not os.path.exists(patient_folder):
@@ -174,7 +197,7 @@ for idx, row in enumerate(variant_rows):
             writer.writerow([pos, cand, win_seq])
     
     if not candidate_windows_patient:
-        print(f"  No candidate windows found for patient {patient_id}; recording summary as 'none found'.")
+        log_info(f"No candidate windows found for patient {patient_id}.")
         summary_rows.append({
             "patient_ID": patient_id,
             "DNA_variant": dna_variant,
@@ -196,7 +219,7 @@ for idx, row in enumerate(variant_rows):
     y_pred_p = np.zeros((num_candidates, 1))
     candidate_priors_patient = np.array([codon_tis_prior.get(cand, 1) for (_, cand, _) in candidate_windows_patient]).reshape((-1,1))
     
-    print("  Predicting on candidate windows...")
+    log_info(f"Predicting TITER scores for patient {patient_id}.")
     for i in range(32):
         weight_path = os.path.join(MODEL_DIR, f"bestmodel_{i}.hdf5")
         model.load_weights(weight_path)
@@ -225,7 +248,7 @@ for idx, row in enumerate(variant_rows):
                 candidate_windows_patient, candidate_cds_locations, y_pred_n, y_pred_p, rna_sequence_from_pot_noncanonical_TIS_list):
             writer.writerow([cp, cand, cds_loc, win_seq, pred_n[0], pred_p[0], rna_seq])
     
-    print(f"  Predictions for patient {patient_id} saved to {output_csv_patient}.")
+    log_info(f"Saved candidate predictions for patient {patient_id} to {output_csv_patient}.")
     
     best_candidate = None
     best_prob = -1.0
@@ -234,9 +257,9 @@ for idx, row in enumerate(variant_rows):
     for (cp, cand, win_seq), cds_loc, pred_p, rna_seq in zip(
             candidate_windows_patient, candidate_cds_locations, y_pred_p, rna_sequence_from_pot_noncanonical_TIS_list):
         try:
-            prob = float(pred_p)
-        except:
-            prob = 0
+            prob = float(np.asarray(pred_p).item())
+        except Exception:
+            prob = 0.0
         if prob > best_prob:
             best_prob = prob
             best_candidate = {"CDS_Position": cds_loc, "RNA_sequence_from_pot_non_canonical_TIS": rna_seq}
@@ -269,5 +292,5 @@ with open(summary_csv, "w", newline="") as csvfile:
     for row in summary_rows:
         writer.writerow(row)
 
-print(f"\nSummary of patient TIS predictions saved to {summary_csv}.")
-print("\nAll patient variants processed.")
+log_info(f"Summary of patient TIS predictions saved to {summary_csv}.", force=True)
+log_info("TITER processing completed.", force=True)

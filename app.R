@@ -2402,6 +2402,13 @@ Eine permanente inhaltliche Kontrolle der verlinkten Seiten ist jedoch ohne konk
       # Non-canonical TIS via TITER
       if (isTRUE(input$use_titer)) {
         incProgress(0.05, detail = "Running non-canonical TIS analysis (TITER)")
+        titer_loading_note <- showNotification(
+          "Initializing TITER. This can take a moment, especially on first run.",
+          type = "message",
+          duration = NULL,
+          closeButton = FALSE
+        )
+        on.exit(removeNotification(titer_loading_note), add = TRUE)
         titer_status <- ensure_titer_python_ready()
         if (!isTRUE(titer_status$ok)) {
           showNotification(
