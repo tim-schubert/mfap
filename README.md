@@ -12,7 +12,7 @@ The interactive web application (recommended default) is at https://tim-schubert
 
 While we encourage use of the online version of MfAP (see above), we provide instructions for local use below.
 
-**Requirements:** R ≥ 4.4 and Python 3.9–3.12 (3.9 recommended; TensorFlow does not support 3.13+). Also need `git` and `bash`.
+**Requirements:** R ≥ 4.4 and Python 3.9–3.12 (3.9 recommended; TensorFlow does not support 3.13+). Also needed: `git` and `bash`.
 
 **First-time setup** (clone, enter the folder, install dependencies):
 
