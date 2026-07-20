@@ -10,27 +10,28 @@ The interactive web application (recommended default) is at https://tim-schubert
 
 ## Standalone install
 
-While we encourage use of the online version of MfAP (see above), we provide instructions for local use below:
+While we encourage use of the online version of MfAP (see above), we provide instructions for local use below.
 
-Requirements: **R ≥ 4.4** and **Python 3.9–3.12** (3.9 recommended; TensorFlow does not support 3.13+).
+**Requirements:** R ≥ 4.4 and Python 3.9–3.12 (3.9 recommended; TensorFlow does not support 3.13+). Also need `git` and `bash`.
 
-From the repository root (after `git clone` or unpacking a release archive) run:
+**First-time setup** (clone, enter the folder, install dependencies):
 
 ```bash
+git clone https://github.com/tim-schubert/mfap.git
+cd mfap
 bash mfap.sh
 ```
 
-Later launches:
+**Later launches** (from inside the `mfap` folder):
 
 ```bash
 bash mfap.sh --run
 ```
 
-To reinstall:
+**Reinstall** (if needed):
 
 ```bash
 bash mfap.sh --force
 ```
 
-Note: the repository includes TITER model weights under `titer/model/`, so clones and archives are relatively large.
-
+Note: the repository includes TITER model weights under `titer/model/`, so the download is relatively large.
