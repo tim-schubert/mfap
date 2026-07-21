@@ -35,3 +35,4 @@ bash mfap.sh --force
 ```
 
 Note: the repository includes TITER model weights under `titer/model/`, so the download is relatively large.
+We thank Sai Zhang for generously permitting the use of the TITER models (https://github.com/zhangsaithu/titer).
